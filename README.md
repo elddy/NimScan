@@ -1,7 +1,7 @@
 # Nim-Port-Scanner
 Multi-threaded asynchronous port scanner written in Nim
 
-**Beware of _CPU Usage_ when using substantial amount of ports**
+⚠**Beware of _CPU Usage_ when using substantial amount of ports**⚠
 
 ## Change settings before use
 ```Nim
