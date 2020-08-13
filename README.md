@@ -3,10 +3,33 @@ Multi-threaded asynchronous port scanner written in Nim
 
 ⚠**Beware of _CPU Usage_ when using substantial amount of ports**⚠
 
-## Change settings before use
-```Nim
-when isMainModule:
-    let 
-        host = "192.168.1.12" # Change as you wish
-        ports = @[135, 445, 3389, 5985, 22, 139, 80, 443] # Change as you wish
+## Benchmarks
+![](gif/Scanner.gif)
+
+## Tests
+Nim Port Scanner Tested on:
+- Windows 10 x64
+- Kali Linux x64
+
+## Usage
+```Bash
+./scanner -p:<portX>-<portY> <host> [--timeout=<time>] [--showAll]
+./scanner -p:<port> <host> [--timeout=<time>] [--showAll]
+./scanner -p:<port1>,<port2>,<portN> <host> [--timeout=<time>] [--showAll]
+```
+## Examples
+Scan range between 1 to 65535 ports
+
+```Bash
+./Scanner -p:1-65535 10.0.0.69
+```
+
+Scan specific ports
+```Bash
+./Scanner -p:80,443,445 10.0.0.69
+```
+
+Show also closed ports
+```Bash
+./Scanner -p:1-65535 10.0.0.69 --showAll
 ```
