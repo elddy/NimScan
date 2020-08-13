@@ -1,4 +1,4 @@
-import asyncnet, asyncdispatch, times, threadpool, osproc, strutils, regex
+import asyncnet, asyncdispatch, times, threadpool, osproc, strutils, regex, sequtils
 
 var 
     interval = 500
@@ -39,7 +39,7 @@ proc scanPorts(ports: seq[int], host: cstring): seq[int] =
     var realPorts: seq[int]
     for p in ports:
         spawn scan_single(p, host)
-        sync()
+    sync()
     for p in open_ports:
         if p != 0:
             realPorts.add(p)
@@ -47,8 +47,8 @@ proc scanPorts(ports: seq[int], host: cstring): seq[int] =
 
 when isMainModule:
     let 
-        host = "192.168.1.12"
-        ports = @[135, 445, 3389, 5985, 22, 139, 80, 443]
+        host = "10.0.0.39"
+        ports = toSeq(1..65535)
         checkInterval = measureLatency(host)
     if checkInterval != -1:
         interval = checkInterval + 20
