@@ -1,5 +1,5 @@
 #[
-    Test
+    Nim Port Scanner
 ]#
 import asyncdispatch, asyncnet, times, sequtils, threadpool, regex, strutils, osproc, parseopt, os, terminal
 
