@@ -3,6 +3,12 @@ Multi-threaded asynchronous port scanner written in Nim
 
 ⚠**Beware of _CPU Usage_ when using substantial amount of ports**⚠
 
+## Support
+Nim Port Scanner is Cross-platform.
+Tested on:
+- Windows 10 x64
+- Kali Linux x64
+
 ## Usage
 ```Bash
 ./scanner -p:<portX>-<portY> <host> [--timeout=<time>] [--showAll]
