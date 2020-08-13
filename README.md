@@ -6,9 +6,8 @@ Multi-threaded asynchronous port scanner written in Nim
 ## Benchmarks
 ![](gif/Scanner.gif)
 
-## Support
-Nim Port Scanner is Cross-platform.
-Tested on:
+## Tests
+Nim Port Scanner Tested on:
 - Windows 10 x64
 - Kali Linux x64
 
