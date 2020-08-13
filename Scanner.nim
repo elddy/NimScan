@@ -1,11 +1,29 @@
 #[
     Test
 ]#
-import asyncdispatch, asyncnet, times, sequtils, threadpool, regex, strutils, osproc, parseopt, os
+import asyncdispatch, asyncnet, times, sequtils, threadpool, regex, strutils, osproc, parseopt, os, terminal
+
+type 
+    stat = enum
+        open, closed
+    mode = enum
+        all, onlyOpen 
 
 var 
     latency = 1000
     open_ports: array[1..65535, int]
+    current_mode: mode = onlyOpen
+
+#[
+    Prints nice and all
+]#
+proc printC(STATUS: stat, text: string) = 
+    stdout.write text
+    case STATUS
+    of closed:
+        stdout.styledWrite(fgRed, " Closed\n")
+    of open:
+        stdout.styledWrite(fgGreen, " Open\n")
 
 #[
     Measure latency with ping command
@@ -24,10 +42,10 @@ proc measureLatency(ip: string): int =
         else:
             result = -1
     when defined linux:
-        (outp, errC) = execCmdEx("ping $1 -t 1" % [ip])
-        if outp.find(re"time[<=]([\d\.]+)ms", reg):
+        (outp, errC) = execCmdEx("ping $1 -c 1" % [ip])
+        if outp.find(re"time[<=]([\d\.]+).+ms", reg):
             echo "Latency: ", outp[reg.group(0)[0]], "ms"
-            result = outp[reg.group(0)[0]].parseFloat()
+            result = outp[reg.group(0)[0]].parseFloat().toInt()
         else:
             result = -1
 
@@ -36,7 +54,9 @@ proc connect(host: string, p: int, timeout = latency) {.async.} =
     try:
         if await withTimeout(client.connect(host, p.Port), timeout):
             open_ports[p] = p
-            echo p, " Open"
+            printC(open, $p)
+        elif current_mode == all:
+            printC(closed, $p)
     except:
         discard
     finally:
@@ -96,9 +116,9 @@ Options:
 Nim Port Scanner.
 
 Usage:
-    ./scanner -p:<portX>-<portY> <host> [--timeout=<time>]
+    ./scanner -p:<portX>-<portY> <host> [--timeout=<time> | --showAll]
     ./scanner -p:<port> <host> [--timeout=<time>]
-    ./scanner -p:<port1>,<port2>,<portN> <host> [--timeout=<time>]
+    ./scanner -p:<port1>,<port2>,<portN> <host> [--timeout=<time> | --showAll]
     ./scanner (-h | --help)
 
 Options:
@@ -143,6 +163,8 @@ proc validateOpt(host: var string, ports: var seq[int], timeout: var int) =
                         echo "Timeout must be at least 1000ms"
                         quit(-1)
                     timeout = (p.val).parseInt()
+                elif p.key == "showAll":
+                    current_mode = all
                 else:
                     printHelp()
                     quit(-1)
@@ -169,10 +191,12 @@ when isMainModule:
     ## Latency measurement
     latency = measureLatency(host) + timeout # Timeout for each connection
 
+    let currentTime = getTime().toUnix()
+    
     ## Main scanner
     main(host, ports)
 
     var res = toSeq(open_ports)
     res = filter(res, proc (x: int): bool = x > 0)
     echo "Number of open ports: ", res.len()
-    echo cpuTime()
+    echo getTime().toUnix() - currentTime, " Seconds"
