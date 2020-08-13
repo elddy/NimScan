@@ -5,7 +5,7 @@ Multi-threaded asynchronous port scanner written in Nim
 
 ## Usage
 ```Bash
-    ./scanner -p:<portX>-<portY> <host> [--timeout=<time>] [--showAll]
-    ./scanner -p:<port> <host> [--timeout=<time>] [--showAll]
-    ./scanner -p:<port1>,<port2>,<portN> <host> [--timeout=<time>] [--showAll]
+./scanner -p:<portX>-<portY> <host> [--timeout=<time>] [--showAll]
+./scanner -p:<port> <host> [--timeout=<time>] [--showAll]
+./scanner -p:<port1>,<port2>,<portN> <host> [--timeout=<time>] [--showAll]
 ```
