@@ -100,15 +100,16 @@ proc printHelp() =
 Nim Port Scanner.
 
 Usage:
-    scanner.exe -p:<portX>-<portY> <host> [--timeout=<time>]
-    scanner.exe -p:<port> <host> [--timeout=<time>] 
-    scanner.exe -p:<port1>,<port2>,<portN> <host> [--timeout=<time>]
+    scanner.exe -p:<portX>-<portY> <host> [--timeout=<time>] [--showAll]
+    scanner.exe -p:<port> <host> [--timeout=<time>] [--showAll] 
+    scanner.exe -p:<port1>,<port2>,<portN> <host> [--timeout=<time>] [--showAll]
     scanner.exe (-h | --help)
 
 Options:
     -h --help         Show this screen.
     -p                Ports to scan.
     --timeout=<time>  Timeout to add to the latency [default: 1000].
+    --showAll         Show Open and Closed ports
         """
 
     when defined linux:
@@ -116,15 +117,16 @@ Options:
 Nim Port Scanner.
 
 Usage:
-    ./scanner -p:<portX>-<portY> <host> [--timeout=<time> | --showAll]
-    ./scanner -p:<port> <host> [--timeout=<time>]
-    ./scanner -p:<port1>,<port2>,<portN> <host> [--timeout=<time> | --showAll]
+    ./scanner -p:<portX>-<portY> <host> [--timeout=<time>] [--showAll]
+    ./scanner -p:<port> <host> [--timeout=<time>] [--showAll]
+    ./scanner -p:<port1>,<port2>,<portN> <host> [--timeout=<time>] [--showAll]
     ./scanner (-h | --help)
 
 Options:
     -h --help         Show this screen.
     -p                Ports to scan.
     --timeout=<time>  Timeout added to latency [default: 1000].
+    --showAll         Show Open and Closed ports
         """
 
 proc validatePort(port: int) =
