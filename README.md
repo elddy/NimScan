@@ -13,9 +13,9 @@ Nim Port Scanner Tested on:
 
 ## Usage
 ```Bash
-./scanner -p:<portX>-<portY> <host> [--timeout=<time>] [--showAll]
-./scanner -p:<port> <host> [--timeout=<time>] [--showAll]
-./scanner -p:<port1>,<port2>,<portN> <host> [--timeout=<time>] [--showAll]
+./Scanner -p:<portX>-<portY> <host> [--timeout=<time>] [--showAll]
+./Scanner -p:<port> <host> [--timeout=<time>] [--showAll]
+./Scanner -p:<port1>,<port2>,<portN> <host> [--timeout=<time>] [--showAll]
 ```
 ## Examples
 Scan range between 1 to 65535 ports
