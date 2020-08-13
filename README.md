@@ -9,3 +9,7 @@ Multi-threaded asynchronous port scanner written in Nim
 ./scanner -p:<port> <host> [--timeout=<time>] [--showAll]
 ./scanner -p:<port1>,<port2>,<portN> <host> [--timeout=<time>] [--showAll]
 ```
+## Example
+```Bash
+./Scanner -p:1-65535 10.0.0.69
+```
