@@ -6,6 +6,7 @@
 
 #include "stdio.h"
 #include "winsock2.h"
+#include <WS2tcpip.h>
 
 #pragma comment(lib,"ws2_32.lib") //For winsock
 
@@ -14,17 +15,17 @@
 #define SCAN -1
 #define OPEN 1
 #define CLOSED 2
-#define FILTERED 3
+#define SCANNED 3
 
+#define RED   "\x1B[31m"
+#define GRN   "\x1B[32m"
+#define YEL   "\x1B[33m"
+#define RESET "\x1B[0m"
+
+int startSniffer(char * targetToScan, int * portsToScan, int size, char * myIP); // Main export for Nim
 void StartSniffing (SOCKET Sock); //This will sniff here and there
-
 void ProcessPacket (char* , int); //This will decide how to digest
-void PrintIpHeader (char*);
-void PrintIcmpPacket (char* , int);
-void PrintUdpPacket (char* , int);
 void PrintTcpPacket (char* , int);
-void ConvertToHex (char* , unsigned int);
-void PrintData (char* , int);
 
 typedef struct ip_hdr
 {
@@ -82,8 +83,7 @@ typedef struct tcp_header
 } TCP_HDR;
 
 
-FILE *logfile;
-int tcp=0,udp=0,icmp=0,others=0,igmp=0,total=0,i,j;
+int j;
 struct sockaddr_in source,dest;
 char hex[2];
 
@@ -92,12 +92,27 @@ IPV4_HDR *iphdr;
 TCP_HDR *tcpheader;
 int ports[65536];
 char * target;
+char * my_ip;
+int scanned = 0, toScan = 0, countOpenPorts = 0, countClosedPorts = 0, countFilteredPorts = 0;
+int dst_port, src_port;
+char * dst;
+char * src;
+DWORD timeout = 0;
 
-int * startSniffer(char * targetToScan, int * portsToScan, char * myIP)
+// Main sniffer
+int startSniffer(char * targetToScan, int * portsToScan, int size, char * myIP)
 {
 	target = targetToScan;
-	for (int i = 0; i < sizeof(portsToScan) / sizeof(portsToScan[0]); i++)
-		ports[portsToScan[i]] = SCAN;
+	my_ip = myIP;
+	for (int i = 1; i < (size * 2) + 1; i++)
+	{
+		if (portsToScan[i] != 0)
+		{
+			// printf("%d\n", portsToScan[i]);
+			ports[portsToScan[i]] = SCAN;
+			toScan++;
+		}
+	}
 
 	SOCKET sniffer;
 	struct in_addr addr;
@@ -107,51 +122,54 @@ int * startSniffer(char * targetToScan, int * portsToScan, char * myIP)
 	WSADATA wsa;
 
 	//Initialise Winsock
-	printf("\nInitialising Winsock...");
+	// printf("\nInitialising Winsock...");
 	if (WSAStartup(MAKEWORD(2,2), &wsa) != 0)
 	{
 		printf("WSAStartup() failed.\n");
 		return 1;
 	}
-	printf("Initialised");
+	// printf("Initialised");
 
 	//Create a RAW Socket
-	printf("\nCreating RAW Socket...");
+	// printf("\nCreating RAW Socket...");
 	sniffer = socket(AF_INET, SOCK_RAW, IPPROTO_IP);
 	if (sniffer == INVALID_SOCKET)
 	{
 		printf("Failed to create raw socket.\n");
 		return 1;
 	}
-	printf("Created.");
+	// printf("Created.");
+
+	struct sockaddr_in sa;
+	inet_pton(AF_INET, my_ip, &(sa.sin_addr));
 
 	memset(&dest, 0, sizeof(dest));
-	memcpy(&dest.sin_addr.s_addr, myIP, sizeof(dest.sin_addr.s_addr));
+	memcpy(&dest.sin_addr.s_addr, &sa.sin_addr.s_addr, sizeof(dest.sin_addr.s_addr));
 	dest.sin_family = AF_INET;
 	dest.sin_port = 0;
 
-	printf("\nBinding socket to local system and port 0 ...");
+	// printf("\nBinding socket to local system and port 0 ...");
 	if (bind(sniffer,(struct sockaddr *)&dest,sizeof(dest)) == SOCKET_ERROR)
 	{
 		printf("bind(%s) failed.\n", inet_ntoa(addr));
 		return 1;
 	}
-	printf("Binding successful");
+	// printf("Binding successful");
 
 	//Enable this socket with the power to sniff : SIO_RCVALL is the key Receive ALL ;)
 
 	j=1;
-	printf("\nSetting socket to sniff...");
+	// printf("\nSetting socket to sniff...");
 	if (WSAIoctl(sniffer, SIO_RCVALL, &j, sizeof(j), 0, 0, (LPDWORD) &in , 0 , 0) == SOCKET_ERROR)
 	{
 		printf("WSAIoctl() failed.\n");
 		return 1;
 	}
-	printf("Socket set.");
+	// printf("Socket set.");
 
 	//Begin
-	printf("\nStarted Sniffing\n");
-	printf("Packet Capture Statistics...\n");
+	// printf("\nStarted Sniffing\n");
+	// printf("Packet Capture Statistics...\n");
 	StartSniffing(sniffer); //Happy Sniffing
 
 	//End
@@ -163,7 +181,8 @@ int * startSniffer(char * targetToScan, int * portsToScan, char * myIP)
 
 void StartSniffing(SOCKET sniffer)
 {
-	char *Buffer = (char *)malloc(65536); //Its Big!
+	// char *Buffer = (char *)malloc(65536); //Its Big!
+	char Buffer[65536];
 	int mangobyte;
 
 	if (Buffer == NULL)
@@ -178,6 +197,35 @@ void StartSniffing(SOCKET sniffer)
 
 		if(mangobyte > 0)
 		{
+			// printf("Scanned: %d from: %d ports\r", scanned, toScan);
+			if(scanned == toScan)
+			{	
+				// printf("Time elapsed: %d\n", (GetTickCount() - timeout) / 1000);
+				if(timeout == 0)
+				{
+					timeout = GetTickCount();
+				}
+				else if(((GetTickCount() - timeout) / 1000) > 2)
+				{
+					for(int i = 1; i < 65536; i++)
+						if(ports[i] == SCANNED || ports[i] == SCAN)
+							countFilteredPorts++;
+							
+					if (countFilteredPorts <= 10)
+					{
+						for(int i = 1; i < 65536; i++)
+						{
+							if(ports[i] == SCANNED || ports[i] == SCAN)
+								printf("%d filtered\n", i);
+						}
+					}
+					else
+						printf("\nall the other %d ports are filtered\n", countFilteredPorts);
+
+					break;
+				}
+			}
+			
 			ProcessPacket(Buffer, mangobyte);
 		}
 		else
@@ -187,41 +235,30 @@ void StartSniffing(SOCKET sniffer)
 	}
 	while (mangobyte > 0);
 
-	free(Buffer);
+	// free(Buffer);
 }
-
-int countOpenPorts = 0, countClosedPorts = 0;
 
 void ProcessPacket(char* Buffer, int Size)
 {
 	iphdr = (IPV4_HDR *)Buffer;
-	++total;
 
 	switch (iphdr->ip_protocol) //Check the Protocol and do accordingly...
 	{
 		case 6: //TCP Protocol
-		++tcp;
 		PrintTcpPacket(Buffer,Size);
 		break;
 	}
-	// printf("Scanned: %d\r", countClosedPorts + countOpenPorts);
+	// printf("Scanned: %d\r", scanned);
 }
-
 
 void PrintTcpPacket(char* Buffer, int Size)
 {
-	// unsigned short iphdrlen;
-
-	// iphdr = (IPV4_HDR *)Buffer;
-	// iphdrlen = iphdr->ip_header_len*4;
-
-	// tcpheader=(TCP_HDR*)(Buffer+iphdrlen);
-
-    
     unsigned short iphdrlen;
 
 	iphdr = (IPV4_HDR *)Buffer;
 	iphdrlen = iphdr->ip_header_len*4;
+
+	tcpheader=(TCP_HDR*)(Buffer+iphdrlen);
 
 	memset(&source, 0, sizeof(source));
 	source.sin_addr.s_addr = iphdr->ip_srcaddr;
@@ -229,105 +266,63 @@ void PrintTcpPacket(char* Buffer, int Size)
 	memset(&dest, 0, sizeof(dest));
 	dest.sin_addr.s_addr = iphdr->ip_destaddr;
 
-    if (!strcmp(inet_ntoa(source.sin_addr), target))
+	// strcpy(dst, inet_ntoa(dest.sin_addr));
+	// strcpy(src, inet_ntoa(source.sin_addr));
+
+	dst = strdup(inet_ntoa(dest.sin_addr));
+	src = strdup(inet_ntoa(source.sin_addr));
+	dst_port = ntohs(tcpheader->dest_port);
+	src_port = ntohs(tcpheader->source_port);
+
+	// printf("%s:%d Sent to %s:%d\n", src, src_port, dst, dst_port);
+
+	
+
+	// Check if sent SYN to target
+	if(!strcmp(dst, target))
+	{
+		// printf("%s Sent %d to %s\n", src, dst_port, dst);
+		if ((unsigned int)tcpheader->syn == 1 && ports[dst_port] == SCAN)
+		{
+			// printf("%s scanned %d\n", src, dst_port);
+			ports[dst_port] = SCANNED;
+			scanned++;
+		}
+	}
+
+	// Check if got answer
+    else if (!strcmp(src, target))
     {
-		if(ports[ntohs(tcpheader->source_port)] == 0)
+		// printf("%s Sent %d to %s\n", src, src_port, dst);
+		if(ports[src_port] == 0)
 			return;
 
-        tcpheader=(TCP_HDR*)(Buffer+iphdrlen);
-        if ((unsigned int)tcpheader->ack == 1 && (ports[ntohs(tcpheader->source_port)] == SCAN || ports[ntohs(tcpheader->source_port)] == FILTERED))
+        if ((unsigned int)tcpheader->ack == 1 && (ports[src_port] == SCAN || ports[src_port] == SCANNED))
         {
             if ((unsigned int)tcpheader->syn == 1)
             {
-                ports[ntohs(tcpheader->source_port)] = OPEN;
-                fprintf(logfile, "Port %d is Open\n", ntohs(tcpheader->source_port));
+                ports[src_port] = OPEN;
+				printf("%d Open\n", src_port);
                 countOpenPorts++;
             }
             else if((unsigned int)tcpheader->rst == 1)
             {
-                ports[ntohs(tcpheader->source_port)] = CLOSED;
+                ports[src_port] = CLOSED;
+				printf("%d Closed\n", src_port);
                 countClosedPorts++;
-                // fprintf(logfile, "Port %d is Closed\n", ntohs(tcpheader->source_port));
-            }
-			else
-			{
-				ports[ntohs(tcpheader->source_port)] = FILTERED;
-				/* code */
-			}
-			
+            }			
         }
-        if((countClosedPorts + countOpenPorts) == 65535)
-        {
-            printf("Scanned all fucking ports!\n");
-            exit(0);
-        }
-        // fprintf(logfile," |-CWR Flag : %d\n",(unsigned int)tcpheader->cwr);
-        // fprintf(logfile," |-ECN Flag : %d\n",(unsigned int)tcpheader->ecn);
-        // fprintf(logfile," |-Urgent Flag : %d\n",(unsigned int)tcpheader->urg);
-        // fprintf(logfile," |-Acknowledgement Flag : %d\n",(unsigned int)tcpheader->ack);
-        // fprintf(logfile," |-Push Flag : %d\n",(unsigned int)tcpheader->psh);
-        // fprintf(logfile," |-Reset Flag : %d\n",(unsigned int)tcpheader->rst);
-        // fprintf(logfile," |-Synchronise Flag : %d\n",(unsigned int)tcpheader->syn);
-        // fprintf(logfile," |-Finish Flag : %d\n",(unsigned int)tcpheader->fin);
-        // fprintf(logfile," |-Window : %d\n",ntohs(tcpheader->window));
-        // fprintf(logfile," |-Checksum : %d\n",ntohs(tcpheader->checksum));
-        // fprintf(logfile," |-Urgent Pointer : %d\n",tcpheader->urgent_pointer);
-        // fprintf(logfile,"\n");
-        // fprintf(logfile," DATA Dump ");
-        // fprintf(logfile,"\n");
-
-        // fprintf(logfile,"IP Header\n");
-        // PrintData(Buffer,iphdrlen);
-
-        // fprintf(logfile,"TCP Header\n");
-        // PrintData(Buffer+iphdrlen,tcpheader->data_offset*4);
-
-        // fprintf(logfile,"Data Payload\n");
-        // PrintData(Buffer+iphdrlen+tcpheader->data_offset*4
-        // ,(Size-tcpheader->data_offset*4-iphdr->ip_header_len*4));
-
-        // fprintf(logfile,"\n###########################################################");
     }
+
+	free(dst);
+	free(src);
+
 }
 
-/*
-	Print the hex values of the data
-*/
-void PrintData (char* data , int Size)
-{
-	char a , line[17] , c;
-	int j;
-
-	//loop over each character and print
-	for(i=0 ; i < Size ; i++)
-	{
-		c = data[i];
-
-		//Print the hex value for every character , with a space. Important to make unsigned
-		fprintf(logfile," %.2x", (unsigned char) c);
-
-		//Add the character to data line. Important to make unsigned
-		a = ( c >=32 && c <=128) ? (unsigned char) c : '.';
-
-		line[i%16] = a;
-
-		//if last character of a line , then print the line - 16 characters in 1 line
-		if( (i!=0 && (i+1)%16==0) || i == Size - 1)
-		{
-			line[i%16 + 1] = '\0';
-
-			//print a big gap of 10 characters between hex and characters
-			fprintf(logfile ,"          ");
-
-			//Print additional spaces for last lines which might be less than 16 characters in length
-			for( j = strlen(line) ; j < 16; j++)
-			{
-				fprintf(logfile , "   ");
-			}
-
-			fprintf(logfile , "%s \n" , line);
-		}
-	}
-
-	fprintf(logfile , "\n");
-}
+// int main()
+// {
+// 	char target[] = "10.0.0.39";
+// 	char host[] = "10.0.0.1";
+// 	int ports[] = {1, 2, 3, 4, 5, 6, 7, 8, 9 , 10};
+// 	startSniffer(target, ports, 10, host);
+// }

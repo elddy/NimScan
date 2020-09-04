@@ -3,6 +3,12 @@
 ]#
 import sequtils, strutils, parseopt, os, terminal
 
+{.compile: "snifferWindows.c".}
+{.passL: "-lws2_32".}
+{.passL: "-s".}
+
+proc startSniffer*(target: cstring, portsToScan: seq[int], numberOfPorts: int, myIP: cstring): int {.importc: "startSniffer".}
+
 type 
     stat* = enum
         open, closed, filtered, success, error, warning
