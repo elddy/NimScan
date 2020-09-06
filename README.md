@@ -6,9 +6,11 @@ Multithreaded asynchronous port scanner (With filtered option) written in Nim fo
 
 ## Usage
 ```Bash
-nimscan.exe -p:<portX>-<portY> <host> [--timeout=<time>] [--files=<limit of file descriptors>] [-a]
-nimscan.exe -p:<port> <host>
-nimscan.exe -p:<port1>,<port2>,<portN> <host>
+Usage:
+    nimscan.exe -p:<portX>-<portY> <host> [--timeout=<time>] [--files=<limit of file descriptors>] [-a]
+    nimscan.exe -p:<port> <host>
+    nimscan.exe -p:<port1>,<port2>,<portN> <host>
+Options:
     -h, --help        Show this screen.
     -p, --ports       Ports to scan.
     -a, --all         Use rawsockets to find filtered/closed/open ports (Takes longer and less reliable).       
