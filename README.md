@@ -5,7 +5,7 @@ Multithreaded asynchronous port scanner (With filtered option) written in Nim fo
 ![](gif/Scanner.gif)
 
 ## Usage
-```Bash
+```shell
 Usage:
     nimscan.exe -p:<portX>-<portY> <host> [--timeout=<time>] [--files=<limit of file descriptors>] [-a]
     nimscan.exe -p:<port> <host>
