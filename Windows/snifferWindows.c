@@ -204,7 +204,7 @@ void StartSniffing(SOCKET sniffer)
 
 		if(mangobyte > 0)
 		{
-			printf("Scanned: %d from: %d ports\r", scanned, toScan);
+			// printf("Scanned: %d from: %d ports\r", scanned, toScan);
 			if(scanned == toScan)
 			{	
 				// printf("Time elapsed: %d\n", (GetTickCount() - timeout) / 1000);
@@ -223,11 +223,11 @@ void StartSniffing(SOCKET sniffer)
 							if(ports[i] == SCANNED || ports[i] == SCAN)
 								printf("%d %s%s%s\n", i, YEL, "filtered", RESET);		
 					}
+					printf("Number of open ports: %d\n", countOpenPorts);
 					if (countFilteredPorts > 10)
 						printf("\n%d ports are %sfiltered%s\n", countFilteredPorts, YEL, RESET);
 					if (countClosedPorts > 10)
-						printf("\n%d ports are %sclosed%s\n", countClosedPorts, RED, RESET);
-					printf("Number of open ports: %d\n", countOpenPorts);
+						printf("\n%d ports are %sclosed%s\n\n", countClosedPorts, RED, RESET);
 					break;
 				}
 			}

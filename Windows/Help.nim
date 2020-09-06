@@ -3,11 +3,12 @@
 ]#
 import sequtils, strutils, parseopt, os, terminal
 
-{.compile: "snifferWindows.c".}
-{.passL: "-lws2_32".}
-# {.passL: "-s".}
+when defined windows:
+    {.compile: "snifferWindows.c".}
+    {.passL: "-lws2_32".}
+    # {.passL: "-s".}
 
-proc startSniffer*(target: cstring, portsToScan: ptr int, numberOfPorts: int, myIP: cstring): int {.importc: "startSniffer".}
+    proc startSniffer*(target: cstring, portsToScan: ptr int, numberOfPorts: int, myIP: cstring): int {.importc: "startSniffer".}
 
 type 
     stat* = enum

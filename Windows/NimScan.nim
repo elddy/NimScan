@@ -33,12 +33,19 @@ proc scan(ip: string, port: int) {.async.} =
     # dec current_open_files
     
 proc startScan(ip: string, port_seq: seq[int]) {.async.} =
-    for port in port_seq:
+    # for port in port_seq:
+    #     inc scanned
+    #     asyncCheck scan(ip, port)
+    #     if current_mode == openFiltered:
+    #         await sleepAsync(timeout / 10000)
+    # drain(timeout)
+    var sockops = newseq[Future[void]](port_seq.len)
+    for i in 0..<port_seq.len:
         inc scanned
-        asyncCheck scan(ip, port)
+        sockops[i] = scan(ip, port_seq[i])
         if current_mode == openFiltered:
             await sleepAsync(timeout / 10000)
-    drain(timeout * 1000)
+    waitFor all(sockops)
     current_open_files = current_open_files - port_seq.len
     
 proc threadScanner(supSocket: SuperSocket) {.thread.} =
@@ -53,10 +60,10 @@ proc threadSniffer(supSocket: SuperSocket) {.thread.} =
     var
         host = supSocket.IP
         port_seq = supSocket.ports
-
-    if startSniffer(host, addr port_seq[0], port_seq.len, $getPrimaryIPAddr()) == 1:
-        printC(error, "Run as administrator")
-        quit(-1)
+    when defined windows:
+        if startSniffer(host, addr port_seq[0], port_seq.len, $getPrimaryIPAddr()) == 1:
+            printC(error, "Run as administrator")
+            quit(-1)
 
 proc main(host: string, scan_ports: seq[int]) =
     var 
