@@ -4,8 +4,9 @@
 	Author : Silver Moon ( m00n.silv3r@gmail.com )
 */
 
-#include "stdio.h"
-#include "winsock2.h"
+#include <stdio.h>
+#include <windows.h>
+#include <winsock2.h>
 #include <WS2tcpip.h>
 
 #pragma comment(lib,"ws2_32.lib") //For winsock
@@ -17,10 +18,15 @@
 #define CLOSED 2
 #define SCANNED 3
 
-#define RED   "\x1B[31m"
-#define GRN   "\x1B[32m"
-#define YEL   "\x1B[33m"
-#define RESET "\x1B[0m"
+// #define RED   "\033[31m"
+// #define GRN   "\033[32m"
+// #define YEL   "\033[33m"
+// #define RESET "\033[0m"
+
+static const char YEL[] = "\033[0;33m";
+static const char RED[] = "\033[0;31m";
+static const char GRN[] = "\033[0;32m";
+static const char RESET[] = "\033[0m";
 
 int startSniffer(char * targetToScan, int * portsToScan, int size, char * myIP); // Main export for Nim
 void StartSniffing (SOCKET Sock); //This will sniff here and there
@@ -104,8 +110,9 @@ int startSniffer(char * targetToScan, int * portsToScan, int size, char * myIP)
 {
 	target = targetToScan;
 	my_ip = myIP;
-	for (int i = 1; i < (size * 2) + 1; i++)
+	for (int i = 0; i < (size * 2); i++)
 	{
+		// printf("%d\n", portsToScan[i]);
 		if (portsToScan[i] != 0)
 		{
 			// printf("%d\n", portsToScan[i]);
@@ -197,7 +204,7 @@ void StartSniffing(SOCKET sniffer)
 
 		if(mangobyte > 0)
 		{
-			// printf("Scanned: %d from: %d ports\r", scanned, toScan);
+			printf("Scanned: %d from: %d ports\r", scanned, toScan);
 			if(scanned == toScan)
 			{	
 				// printf("Time elapsed: %d\n", (GetTickCount() - timeout) / 1000);
@@ -205,23 +212,22 @@ void StartSniffing(SOCKET sniffer)
 				{
 					timeout = GetTickCount();
 				}
-				else if(((GetTickCount() - timeout) / 1000) > 2)
+				else if(((GetTickCount() - timeout) / 1000) > 0.5)
 				{
 					for(int i = 1; i < 65536; i++)
 						if(ports[i] == SCANNED || ports[i] == SCAN)
 							countFilteredPorts++;
-							
-					if (countFilteredPorts <= 10)
-					{
-						for(int i = 1; i < 65536; i++)
-						{
+					for(int i = 1; i < 65536; i++)
+					{	
+						if (countFilteredPorts <= 10)
 							if(ports[i] == SCANNED || ports[i] == SCAN)
-								printf("%d filtered\n", i);
-						}
+								printf("%d %s%s%s\n", i, YEL, "filtered", RESET);		
 					}
-					else
-						printf("\nall the other %d ports are filtered\n", countFilteredPorts);
-
+					if (countFilteredPorts > 10)
+						printf("\n%d ports are %sfiltered%s\n", countFilteredPorts, YEL, RESET);
+					if (countClosedPorts > 10)
+						printf("\n%d ports are %sclosed%s\n", countClosedPorts, RED, RESET);
+					printf("Number of open ports: %d\n", countOpenPorts);
 					break;
 				}
 			}
@@ -302,13 +308,14 @@ void PrintTcpPacket(char* Buffer, int Size)
             if ((unsigned int)tcpheader->syn == 1)
             {
                 ports[src_port] = OPEN;
-				printf("%d Open\n", src_port);
+				printf("%d %sOpen%s\n", src_port, GRN, RESET);
                 countOpenPorts++;
             }
             else if((unsigned int)tcpheader->rst == 1)
             {
                 ports[src_port] = CLOSED;
-				printf("%d Closed\n", src_port);
+				if (toScan <= 10) 
+					printf("%d %sClosed%s\n", src_port, RED, RESET);
                 countClosedPorts++;
             }			
         }
@@ -321,8 +328,11 @@ void PrintTcpPacket(char* Buffer, int Size)
 
 // int main()
 // {
-// 	char target[] = "10.0.0.39";
-// 	char host[] = "10.0.0.1";
+// 	printf(GRN);
+// 	printf("HI\n");
+// 	printf(RESET);
+// 	char target[] = "192.168.1.21";
+// 	char host[] = "192.168.1.24";
 // 	int ports[] = {1, 2, 3, 4, 5, 6, 7, 8, 9 , 10};
 // 	startSniffer(target, ports, 10, host);
 // }

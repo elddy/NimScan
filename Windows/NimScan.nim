@@ -2,7 +2,7 @@
     Nim Port Scanner
 ]#
 import Help
-import asyncdispatch, asyncnet, times, sequtils, random, nativesockets, os, net
+import asyncdispatch, asyncnet, times, sequtils, random, nativesockets, os, net, strutils, osproc
 
 var 
     openPorts: array[1..65535, int]
@@ -38,7 +38,7 @@ proc startScan(ip: string, port_seq: seq[int]) {.async.} =
         asyncCheck scan(ip, port)
         if current_mode == openFiltered:
             await sleepAsync(timeout / 10000)
-    drain(timeout)
+    drain(timeout * 1000)
     current_open_files = current_open_files - port_seq.len
     
 proc threadScanner(supSocket: SuperSocket) {.thread.} =
@@ -54,7 +54,7 @@ proc threadSniffer(supSocket: SuperSocket) {.thread.} =
         host = supSocket.IP
         port_seq = supSocket.ports
 
-    if startSniffer(host, port_seq, port_seq.len, $getPrimaryIPAddr()) == 1:
+    if startSniffer(host, addr port_seq[0], port_seq.len, $getPrimaryIPAddr()) == 1:
         printC(error, "Run as administrator")
         quit(-1)
 
@@ -62,7 +62,7 @@ proc main(host: string, scan_ports: seq[int]) =
     var 
         thr: seq[Thread[SuperSocket]]
         thread: Thread[SuperSocket]
-        division = (scan_ports.len() / (file_discriptors_number / maxThreads).toInt()).toInt()
+        division = (scan_ports.len() / file_discriptors_number).toInt()
 
     for i in 1..maxThreads:
         thr.add(thread)
@@ -74,9 +74,8 @@ proc main(host: string, scan_ports: seq[int]) =
         timeout = 1
 
     ## For debuging
-    # echo "Number of file discriptors in a moment: ", (scan_ports.len / division).toInt()
-    # echo "Div: ", division
-    # echo "Max number of threads: ", thr.len
+    printC(stat.info, "Number of threads -> " & $maxThreads)
+    printC(stat.info, "Number of file discriptors per thread -> " & $(scan_ports.len / division).toInt() & "\n")
     # echo "Timeout: ", timeout
     # echo "Mode: ", current_mode
 
@@ -114,21 +113,35 @@ when isMainModule:
     ## In filtered mode use rawsockets
     if current_mode == openFiltered:
         printC(warning, "In filtered mode")
+        let addCommand = "netsh advfirewall firewall add rule name='NimScan' dir=in action=allow program=\"$1\" enable=yes" % [getAppFilename()]
+        var (outC, errC) = execCmdEx(addCommand)
+        if errC == 0:
+            printC(success, "Added to firewall")
+        else:
+            printC(error, outC)
+            quit(-1)
         var 
             thread: Thread[SuperSocket]
             supSocket = SuperSocket(IP: host, ports: ports) 
         createThread(thread, threadSniffer, supSocket)
-        sleep(1000)
+        sleep(500)
         
         ## Start time
         currentTime = getTime().toUnix()
 
         ## Main scanner
         main(host, ports)
-
+        echo "\nScanned: ", scanned
         ## Wait for the raw socket sniffer to finish
         joinThread(thread)
 
+        let delCommand = "netsh advfirewall firewall delete rule name='NimScan'"
+        (outC, errC) = execCmdEx(addCommand)
+        if errC == 0:
+            printC(success, "Removed from firewall\n")
+        else:
+            printC(error, outC)
+            quit(-1)
     else:
         ## In default mode use normal async scan
         
@@ -141,10 +154,10 @@ when isMainModule:
         var res = toSeq(openPorts)
         res = filter(res, proc (x: int): bool = x > 0)
         echo "Number of open ports: ", res.len()
-        echo "Scanned: ", scanned
+        # echo "Scanned: ", scanned
     
     ## End time
-    echo "Done async + multithreading in: ", getTime().toUnix() - currentTime, " Seconds"
+    echo "Done scanning in: ", getTime().toUnix() - currentTime, " Seconds"
 
             
             

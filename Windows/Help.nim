@@ -5,13 +5,13 @@ import sequtils, strutils, parseopt, os, terminal
 
 {.compile: "snifferWindows.c".}
 {.passL: "-lws2_32".}
-{.passL: "-s".}
+# {.passL: "-s".}
 
-proc startSniffer*(target: cstring, portsToScan: seq[int], numberOfPorts: int, myIP: cstring): int {.importc: "startSniffer".}
+proc startSniffer*(target: cstring, portsToScan: ptr int, numberOfPorts: int, myIP: cstring): int {.importc: "startSniffer".}
 
 type 
     stat* = enum
-        open, closed, filtered, success, error, warning
+        open, closed, filtered, success, error, warning, info
     
     mode* = enum
         all, onlyOpen, openFiltered 
@@ -46,6 +46,9 @@ proc printC*(STATUS: stat, text: string) =
         stdout.write text, "\n"
     of warning:
         stdout.styledWrite(fgYellow, "[!] ")
+        stdout.write text, "\n"
+    of info:
+        stdout.styledWrite(fgBlue, "[*] ")
         stdout.write text, "\n"
 
 proc printHelp*() =
@@ -126,6 +129,9 @@ proc validateOpt*(host: var string, ports: var seq[int], timeout: var int, numOf
                     numOfThreads = (p.val).parseInt()
                 elif p.key.toLower() == "files":
                     fileDis = (p.val).parseInt()
+                    if fileDis > 10000:
+                        printC(warning, "Max file descriptors per thread -> 10000")
+                        fileDis = 10000
                 else:
                     printHelp()
                     quit(-1)
