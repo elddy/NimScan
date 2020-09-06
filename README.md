@@ -1,5 +1,5 @@
 # NimScan
-Asynchronous port scanner (With filtered option) written in Nim for Windows
+Multithreaded asynchronous port scanner (With filtered option) written in Nim for Windows
 
 ## Benchmarks
 ![](gif/Scanner.gif)
