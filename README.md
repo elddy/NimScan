@@ -13,7 +13,7 @@ nimscan.exe -p:<port1>,<port2>,<portN> <host>
     -p, --ports       Ports to scan.
     -a, --all         Use rawsockets to find filtered/closed/open ports (Takes longer and less reliable).       
     --timeout=<time>  Timeout to add to the latency [default: 1500].
-    --files           File descriptors per thread limit.
+    --files=<limit>   File descriptors per thread limit.
     
 ```
 ## Examples
