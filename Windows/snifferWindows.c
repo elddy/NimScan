@@ -28,7 +28,7 @@ static const char RED[] = "\033[0;31m";
 static const char GRN[] = "\033[0;32m";
 static const char RESET[] = "\033[0m";
 
-int startSniffer(char * targetToScan, int * portsToScan, int size, char * myIP); // Main export for Nim
+int startSniffer(char * targetToScan, int * portsToScan, int size, char * myIP, int timeout); // Main export for Nim
 void StartSniffing (SOCKET Sock); //This will sniff here and there
 void ProcessPacket (char* , int); //This will decide how to digest
 void PrintTcpPacket (char* , int);
@@ -103,13 +103,14 @@ int scanned = 0, toScan = 0, countOpenPorts = 0, countClosedPorts = 0, countFilt
 int dst_port, src_port;
 char * dst;
 char * src;
-DWORD timeout = 0;
+DWORD timeout = 0, externalTimeout = 0;
 
 // Main sniffer
-int startSniffer(char * targetToScan, int * portsToScan, int size, char * myIP)
+int startSniffer(char * targetToScan, int * portsToScan, int size, char * myIP, int timeOut)
 {
 	target = targetToScan;
 	my_ip = myIP;
+	externalTimeout = timeOut;
 	for (int i = 0; i < (size * 2); i++)
 	{
 		// printf("%d\n", portsToScan[i]);
@@ -205,14 +206,14 @@ void StartSniffing(SOCKET sniffer)
 		if(mangobyte > 0)
 		{
 			// printf("Scanned: %d from: %d ports\r", scanned, toScan);
-			if(scanned == toScan)
-			{	
-				// printf("Time elapsed: %d\n", (GetTickCount() - timeout) / 1000);
+			// if(scanned == toScan)
+			// {	
+				// printf("Time elapsed: %d, from: %d\n", (GetTickCount() - timeout), externalTimeout);
 				if(timeout == 0)
 				{
 					timeout = GetTickCount();
 				}
-				else if(((GetTickCount() - timeout) / 1000) > 0.5)
+				else if(((GetTickCount() - timeout) / 1000) > externalTimeout)
 				{
 					for(int i = 1; i < 65536; i++)
 						if(ports[i] == SCANNED || ports[i] == SCAN)
@@ -223,14 +224,14 @@ void StartSniffing(SOCKET sniffer)
 							if(ports[i] == SCANNED || ports[i] == SCAN)
 								printf("%d %s%s%s\n", i, YEL, "filtered", RESET);		
 					}
-					printf("Number of open ports: %d\n", countOpenPorts);
+					// printf("Number of open ports: %d\n", countOpenPorts);
 					if (countFilteredPorts > 10)
 						printf("\n%d ports are %sfiltered%s\n", countFilteredPorts, YEL, RESET);
 					if (countClosedPorts > 10)
 						printf("\n%d ports are %sclosed%s\n\n", countClosedPorts, RED, RESET);
 					break;
 				}
-			}
+			// }
 			
 			ProcessPacket(Buffer, mangobyte);
 		}
@@ -285,31 +286,31 @@ void PrintTcpPacket(char* Buffer, int Size)
 	
 
 	// Check if sent SYN to target
-	if(!strcmp(dst, target))
-	{
-		// printf("%s Sent %d to %s\n", src, dst_port, dst);
-		if ((unsigned int)tcpheader->syn == 1 && ports[dst_port] == SCAN)
-		{
-			// printf("%s scanned %d\n", src, dst_port);
-			ports[dst_port] = SCANNED;
-			scanned++;
-		}
-	}
+	// if(!strcmp(dst, target))
+	// {
+	// 	// printf("%s Sent %d to %s\n", src, dst_port, dst);
+	// 	if ((unsigned int)tcpheader->syn == 1 && ports[dst_port] == SCAN)
+	// 	{
+	// 		// printf("%s scanned %d\n", src, dst_port);
+	// 		ports[dst_port] = SCANNED;
+	// 		scanned++;
+	// 	}
+	// }
 
 	// Check if got answer
-    else if (!strcmp(src, target))
+    if (!strcmp(src, target))
     {
 		// printf("%s Sent %d to %s\n", src, src_port, dst);
 		if(ports[src_port] == 0)
 			return;
 
-        if ((unsigned int)tcpheader->ack == 1 && (ports[src_port] == SCAN || ports[src_port] == SCANNED))
+        else if ((unsigned int)tcpheader->ack == 1 && (ports[src_port] == SCAN || ports[src_port] == SCANNED))
         {
             if ((unsigned int)tcpheader->syn == 1)
             {
                 ports[src_port] = OPEN;
-				printf("%d %sOpen%s\n", src_port, GRN, RESET);
-                countOpenPorts++;
+				// printf("%d %sOpen%s\n", src_port, GRN, RESET);
+                // countOpenPorts++;
             }
             else if((unsigned int)tcpheader->rst == 1)
             {
