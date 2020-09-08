@@ -8,7 +8,7 @@ when defined windows:
 
 import globals, latency
 import asyncnet, asyncdispatch, net
-import random, sequtils, os, strutils, terminal
+import random, sequtils, os, strutils
 
 randomize()
 
@@ -21,7 +21,6 @@ proc connect(ip: string, port: int) {.async.} =
     try:
         if await withTimeout(sock.connect(ip, port.Port), timeout):
             openPorts[port] = port
-            # stdout.eraseLine
             printC(stat.open, $port)
         else:
             openPorts[port] = -1
@@ -46,11 +45,7 @@ proc scan(ip: string, port_seq: seq[int]) {.async.} =
             if current_mode == mode.all:
                 ## In all mode
                 await sleepAsync(timeout / 10000)
-        when defined linux:
-            await sleepAsync(timeout / 1000000000)
-        # stdout.write(ip & " -> Scanned: " & $scanned & " from: " & $toScan & "\r")
     waitFor all(sockops)
-    # current_open_files = current_open_files - port_seq.len
 
 #[
     Scan thread
@@ -102,11 +97,9 @@ proc startScanner*(host: var string, scan_ports: seq[int]) =
         block current_ports:
             while true:
                 for i in low(thr)..high(thr):
-                    if current_open_files >= file_discriptors_number:
-                        break
-                    elif not thr[i].running:
+                    if not thr[i].running:
                         let supSocket = SuperSocket(IP: host, ports: ports)    
-                        createThread(thr[i], scan_thread, supSocket)
+                        createThread(thr[i], scan_thread, supSocket) ## Threads working on windows only
                         break current_ports
                 sleep(1)
 

@@ -46,9 +46,6 @@ proc validateOpt*(host: var string, ports: var seq[int], timeout: var int, numOf
                     current_mode = mode.all
                 of "f", "files":
                     fileDis = (p.val).parseInt()
-                    if fileDis > 10000:
-                        printC(warning, "Max file descriptors per thread -> 10000")
-                        # fileDis = 10000
                 of "t", "threads":
                     threadsSetted = true
                     numOfThreads = (p.val).parseInt()
