@@ -28,7 +28,11 @@ proc connect(ip: string, port: int) {.async.} =
     except:
         discard
     finally:
-        sock.close()
+        try:
+            sock.close()
+            dec current_open_files
+        except:
+            discard
 
 #[
     Scan ports chunck
@@ -38,12 +42,15 @@ proc scan(ip: string, port_seq: seq[int]) {.async.} =
     for i in 0..<port_seq.len:
         inc scanned
         sockops[i] = connect(ip, port_seq[i])
-        if current_mode == mode.all:
-            ## In all mode
-            await sleepAsync(timeout / 10000)
+        when defined windows:
+            if current_mode == mode.all:
+                ## In all mode
+                await sleepAsync(timeout / 10000)
+        when defined linux:
+            await sleepAsync(timeout / 1000000000)
         # stdout.write(ip & " -> Scanned: " & $scanned & " from: " & $toScan & "\r")
     waitFor all(sockops)
-    current_open_files = current_open_files - port_seq.len
+    # current_open_files = current_open_files - port_seq.len
 
 #[
     Scan thread
