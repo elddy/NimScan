@@ -17,7 +17,7 @@ randomize()
 ]#
 proc connect(ip: string, port: int) {.async.} =
     var sock = newAsyncSocket()
-    inc current_open_files
+    inc scanned
     try:
         if await withTimeout(sock.connect(ip, port.Port), timeout):
             openPorts[port] = port
@@ -29,7 +29,6 @@ proc connect(ip: string, port: int) {.async.} =
     finally:
         try:
             sock.close()
-            dec current_open_files
         except:
             discard
 
@@ -39,7 +38,6 @@ proc connect(ip: string, port: int) {.async.} =
 proc scan(ip: string, port_seq: seq[int]) {.async.} =
     var sockops = newseq[Future[void]](port_seq.len)
     for i in 0..<port_seq.len:
-        inc scanned
         sockops[i] = connect(ip, port_seq[i])
         when defined windows:
             if current_mode == mode.all:
