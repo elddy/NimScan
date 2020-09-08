@@ -1,5 +1,5 @@
 # NimScan
-Multi-threaded asynchronous port scanner (With filtered option) written in Nim for Windows
+Multi-threaded asynchronous port scanner (With filtered option - Windows support only)
 
 ## Benchmarks
 ![](gif/Scanner.gif)
@@ -14,7 +14,7 @@ Options:
     -h, --help            Show this screen.
     -p, --ports           Ports to scan. [default: 1-65,535]
     -a, --all             Use rawsockets to find filtered/closed/open ports (Takes longer and limited to 10,000 ports).       
-    -t, --threads         Number of threads per scan.
+    -t, --threads         Number of threads per scan. (Not supported on Linux)
     -f, --files           File descriptors per thread limit.
     --timeout             Timeout to add to the latency [default: 1500].
     
