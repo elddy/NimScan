@@ -23,15 +23,15 @@ Options:
 Scan range between 1 to 5000 ports
 
 ```shell
-nimscan.exe -p:1-5000 10.0.0.69
+NimScan -p:1-5000 10.0.0.69
 ```
 
 Scan specific ports
 ```shell
-nimscan.exe -p:80,443,445 10.0.0.69
+NimScan -p:80,443,445 10.0.0.69
 ```
 
 Show closed/filtered/open using rawsockets
 ```shell
-nimscan.exe 10.0.0.69 -a
+NimScan.exe 10.0.0.69 -a
 ```
