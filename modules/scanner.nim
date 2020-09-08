@@ -21,7 +21,7 @@ proc connect(ip: string, port: int) {.async.} =
     try:
         if await withTimeout(sock.connect(ip, port.Port), timeout):
             openPorts[port] = port
-            stdout.eraseLine
+            # stdout.eraseLine
             printC(stat.open, $port)
         else:
             openPorts[port] = -1
@@ -41,7 +41,7 @@ proc scan(ip: string, port_seq: seq[int]) {.async.} =
         if current_mode == mode.all:
             ## In all mode
             await sleepAsync(timeout / 500)
-        stdout.write(ip & " -> Scanned: " & $scanned & " from: " & $toScan & "\r")
+        # stdout.write(ip & " -> Scanned: " & $scanned & " from: " & $toScan & "\r")
     waitFor all(sockops)
     current_open_files = current_open_files - port_seq.len
 

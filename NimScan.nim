@@ -5,7 +5,7 @@
 when defined windows:
     import modules/windows_sniffer
 
-import modules/[globals, latency, param_parser, scanner]
+import modules/[globals, param_parser, scanner]
 import times, sequtils, os, net, nativesockets
 
 proc main() =
@@ -61,7 +61,3 @@ proc main() =
 
 when isMainModule:
     main()
-            
-            
-
-    
