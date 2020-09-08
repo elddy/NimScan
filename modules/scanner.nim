@@ -40,7 +40,7 @@ proc scan(ip: string, port_seq: seq[int]) {.async.} =
         sockops[i] = connect(ip, port_seq[i])
         if current_mode == mode.all:
             ## In all mode
-            await sleepAsync(timeout / 500)
+            await sleepAsync(timeout / 10000)
         # stdout.write(ip & " -> Scanned: " & $scanned & " from: " & $toScan & "\r")
     waitFor all(sockops)
     current_open_files = current_open_files - port_seq.len

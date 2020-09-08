@@ -13,7 +13,6 @@ proc validatePort(port: int) =
 proc validateOpt*(host: var string, ports: var seq[int], timeout: var int, numOfThreads: var int, fileDis: var int) =
     var 
         p = initOptParser(commandLineParams())
-        timeoutSetted = false
         threadsSetted = false
         allSetted = false
     while true:
@@ -41,7 +40,6 @@ proc validateOpt*(host: var string, ports: var seq[int], timeout: var int, numOf
                         validatePort((p.val).parseInt())
                         ports.add((p.val).parseInt())
                 of "timeout":
-                    timeoutSetted = true
                     timeout = (p.val).parseInt()
                 of "a", "all":
                     allSetted = true
@@ -67,8 +65,8 @@ proc validateOpt*(host: var string, ports: var seq[int], timeout: var int, numOf
             host = p.key
     
     ## Validate options
-    if allSetted and (timeoutSetted or threadsSetted):
-        printC(error, "Can't use all mode (-a | --all) with custom timeout (--timeout) or custom number of threads (-t | --threads)")
+    if allSetted and threadsSetted:
+        printC(error, "Can't use all mode (-a | --all) with custom number of threads (-t | --threads)")
         quit(-1)
     
     elif host == "":

@@ -55,9 +55,9 @@ proc main() =
         
     var res = toSeq(openPorts)
     res = filter(res, proc (x: int): bool = x > 0)
-    echo "Number of open ports: ", res.len()
+    printC(success, "Number of open ports: " & $res.len())
     
-    printC(success, "Done scanning in: " & $(getTime().toUnix() - currentTime) & " Seconds\n") ## End time
+    printC(info, "Done scanning in: " & $(getTime().toUnix() - currentTime) & " Seconds\n") ## End time
 
 when isMainModule:
     main()
