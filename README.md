@@ -1,4 +1,4 @@
-# NimScan
+# 👑 NimScan 👑
 Multi-threaded asynchronous port scanner (With filtered option - Windows support only)
 
 ## Benchmarks
