@@ -2,10 +2,12 @@
 Really fast port scanner (With filtered option - Windows support only)
 
 ## Benchmarks
-|    Option    |     Linux      |    Windows    |
+|    Option    |  🐧 Linux 🐧  |  🗔 Windows 🗔 |
 |    :---:     |     :---:      |     :---:     |
 | -f:10,000    | 9 Seconds      | 14 Seconds    |
 | -f:5,000     | 16 Seconds     | 20 Seconds    |
+
+The results are for 65K ports per scan.
 
 ## Usage
 ```shell
