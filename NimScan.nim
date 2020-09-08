@@ -6,7 +6,7 @@ when defined windows:
     import modules/windows_sniffer
 
 import modules/[globals, latency, param_parser, scanner]
-import times, sequtils, os
+import times, sequtils, os, net, nativesockets
 
 proc main() =
     ## Main
@@ -16,7 +16,12 @@ proc main() =
         currentTime: int64
     
     validateOpt(host, ports, timeout, maxThreads, file_discriptors_number)
-    
+
+    if not isIpAddress host:
+        host = getHostByName(host).addrList[0]
+        printC(info, "Target IP -> " & host) 
+
+
     if current_mode == mode.all:
         ## In filtered mode use rawsockets
         printC(warning, "In rawsockets mode")

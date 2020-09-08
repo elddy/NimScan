@@ -28,7 +28,7 @@ static const char RED[] = "\033[0;31m";
 static const char GRN[] = "\033[0;32m";
 static const char RESET[] = "\033[0m";
 
-int startSniffer(char * targetToScan, int * portsToScan, int size, char * myIP, int timeout); // Main export for Nim
+int startSniffer(char * targetToScan, int * portsToScan, int size, char * myIP); // Main export for Nim
 void StartSniffing (SOCKET Sock); //This will sniff here and there
 void ProcessPacket (char* , int); //This will decide how to digest
 void PrintTcpPacket (char* , int);
@@ -106,11 +106,10 @@ char * src;
 DWORD timeout = 0, externalTimeout = 0;
 
 // Main sniffer
-int startSniffer(char * targetToScan, int * portsToScan, int size, char * myIP, int timeOut)
+int startSniffer(char * targetToScan, int * portsToScan, int size, char * myIP)
 {
 	target = targetToScan;
 	my_ip = myIP;
-	externalTimeout = timeOut;
 	for (int i = 0; i < (size * 2); i++)
 	{
 		// printf("%d\n", portsToScan[i]);
@@ -187,21 +186,6 @@ int startSniffer(char * targetToScan, int * portsToScan, int size, char * myIP, 
 	return 0;
 }
 
-typedef struct PARAMETERS
-{
-    char * buffer;
-    int mangobyte;
-};
-int countThreads = 0;
-DWORD WINAPI thread(LPVOID param)
-{
-	countThreads++;
-	// printf("Thread %d created\n", countThreads);
-    struct PARAMETERS* params = (struct PARAMETERS*)param;
-    ProcessPacket(params->buffer, params->mangobyte);
-    return 0;
-}
-
 void StartSniffing(SOCKET sniffer)
 {
 	// char *Buffer = (char *)malloc(65536); //Its Big!
@@ -221,7 +205,7 @@ void StartSniffing(SOCKET sniffer)
 		if(mangobyte > 0)
 		{
 			ProcessPacket(Buffer, mangobyte);
-			// printf("Scanned: %d from: %d ports\r", scanned, toScan);
+			// printf("%s -> Scanned: %d from: %d ports\r", target, scanned, toScan);
 			if(scanned == toScan)
 			{	
 				// printf("Time elapsed: %d, from: %d\n", (GetTickCount() - timeout), externalTimeout);
@@ -248,16 +232,6 @@ void StartSniffing(SOCKET sniffer)
 					break;
 				}
 			}
-			// struct PARAMETERS params;
-			// params.buffer = &Buffer;
-			// params.mangobyte = mangobyte;
-			// CreateThread( 
-            // NULL,                   
-            // 0,                       
-            // thread,      
-            // &params,        
-            // 0,           
-            // NULL);
 		}
 		else
 		{

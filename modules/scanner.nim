@@ -6,9 +6,9 @@ when defined windows:
     ## Use C winsock raw socket sniffer
     import windows_sniffer
 
-import globals
+import globals, latency
 import asyncnet, asyncdispatch, net
-import random, sequtils, os
+import random, sequtils, os, strutils, terminal
 
 randomize()
 
@@ -21,6 +21,7 @@ proc connect(ip: string, port: int) {.async.} =
     try:
         if await withTimeout(sock.connect(ip, port.Port), timeout):
             openPorts[port] = port
+            stdout.eraseLine
             printC(stat.open, $port)
         else:
             openPorts[port] = -1
@@ -39,7 +40,8 @@ proc scan(ip: string, port_seq: seq[int]) {.async.} =
         sockops[i] = connect(ip, port_seq[i])
         if current_mode == mode.all:
             ## In all mode
-            await sleepAsync(timeout / 500) 
+            await sleepAsync(timeout / 500)
+        stdout.write(ip & " -> Scanned: " & $scanned & " from: " & $toScan & "\r")
     waitFor all(sockops)
     current_open_files = current_open_files - port_seq.len
 
@@ -69,7 +71,7 @@ proc sniffer_thread*(supSocket: SuperSocket) {.thread.} =
 #[
     Scanner per host
 ]#
-proc startScanner*(host: string, scan_ports: seq[int]) =
+proc startScanner*(host: var string, scan_ports: seq[int]) =
     var 
         thr: seq[Thread[SuperSocket]]
         thread: Thread[SuperSocket]
@@ -77,10 +79,18 @@ proc startScanner*(host: string, scan_ports: seq[int]) =
     for i in 1..maxThreads:
         thr.add(thread)
     
-    printC(stat.info, "Number of threads -> " & $maxThreads)
-    printC(stat.info, "Number of file discriptors per thread -> " & $(scan_ports.len / division).toInt() & "\n")
-    printC(stat.info, "Timeout: " & $timeout)
+    let ms = measure_latency(host)
+    if ms == -1:
+        printC(warning, "$1 does not respond to ping" % [host])
+    else:
+        timeout = timeout + ms
 
+    toScan = scan_ports.len
+
+    printC(stat.info, "Number of threads -> " & $maxThreads)
+    printC(stat.info, "Number of file discriptors per thread -> " & $(scan_ports.len / division).toInt())
+    printC(stat.info, "Timeout: " & $timeout & "ms")
+    
     for ports in scan_ports.distribute(division):
         block current_ports:
             while true:
@@ -91,7 +101,7 @@ proc startScanner*(host: string, scan_ports: seq[int]) =
                         let supSocket = SuperSocket(IP: host, ports: ports)    
                         createThread(thr[i], scan_thread, supSocket)
                         break current_ports
-                    sleep(1)
+                sleep(1)
 
     thr.joinThreads()
     echo ""

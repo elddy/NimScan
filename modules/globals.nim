@@ -20,9 +20,10 @@ var
     ## Default ##
     current_mode*: mode = onlyOpen
     timeout* = 1500 
-    file_discriptors_number* = 4500 
+    file_discriptors_number* = 5000 
     maxThreads* = 1
     scanned* = 0
+    toScan* = 0
     current_open_files* = 0
     division* = 1 ## Division for port chuncks
 
