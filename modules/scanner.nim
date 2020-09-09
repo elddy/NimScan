@@ -99,7 +99,7 @@ proc startScanner*(host: var string, scan_ports: seq[int]) =
                 for i in low(thr)..high(thr):
                     if not thr[i].running:
                         let supSocket = SuperSocket(IP: host, ports: ports)    
-                        createThread(thr[i], scan_thread, supSocket) ## Threads working on windows only
+                        createThread(thr[i], scan_thread, supSocket)
                         sleep(timeout)
                         break current_ports
 

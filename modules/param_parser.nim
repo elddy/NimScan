@@ -5,6 +5,22 @@
 import globals, help
 import parseopt, strutils, os, sequtils
 
+when defined linux:
+    import posix
+    proc validateRlimit*(fds: int) =
+        var 
+            rlimit = RLimit()
+        
+        discard getrlimit(RLIMIT_NOFILE, rlimit)
+        var
+            curr_lim = rlimit.rlim_cur
+            max_lim = rlimit.rlim_max
+        
+        if fds > max_lim:
+            printC(error, "Maximum file descriptor limit -> " & $max_lim)
+            quit(-1)
+
+
 proc validatePort(port: int) =
     if port < 1 or port > 65535:
         printC(error, "Not valid port number, Port range: 0 < port < 65536")
@@ -46,6 +62,8 @@ proc validateOpt*(host: var string, ports: var seq[int], timeout: var int, numOf
                     current_mode = mode.all
                 of "f", "files":
                     fileDis = (p.val).parseInt()
+                    when defined linux:
+                        validateRlimit(fileDis)
                 of "t", "threads":
                     threadsSetted = true
                     numOfThreads = (p.val).parseInt()
