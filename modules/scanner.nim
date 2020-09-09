@@ -59,7 +59,7 @@ proc scan_thread(supSocket: SuperSocket) {.thread.} =
 #[
     Sniffer thread
 ]#
-proc sniffer_thread*(supSocket: SuperSocket) {.thread.} =
+proc sniffer_thread(supSocket: SuperSocket) {.thread.} =
     var
         host = supSocket.IP
         port_seq = supSocket.ports
@@ -98,8 +98,8 @@ proc startScanner*(host: var string, scan_ports: seq[int]) =
                     if not thr[i].running:
                         let supSocket = SuperSocket(IP: host, ports: ports)    
                         createThread(thr[i], scan_thread, supSocket) ## Threads working on windows only
+                        sleep(timeout)
                         break current_ports
-                sleep(1)
 
     thr.joinThreads()
     echo ""

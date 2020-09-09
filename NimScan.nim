@@ -21,7 +21,6 @@ proc main() =
         host = getHostByName(host).addrList[0]
         printC(info, "Target IP -> " & host) 
 
-
     if current_mode == mode.all:
         ## In filtered mode use rawsockets
         printC(warning, "In rawsockets mode")
