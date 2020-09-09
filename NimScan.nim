@@ -6,14 +6,13 @@ when defined windows:
     import modules/windows_sniffer
 
 import modules/[globals, param_parser, scanner]
-import times, sequtils, os, net, nativesockets
+import os, net, nativesockets
 
 proc main() =
     ## Main
     var 
         host: string
         ports: seq[int]
-        currentTime: int64
     
     validateOpt(host, ports, timeout, maxThreads, file_discriptors_number)
 
@@ -34,29 +33,27 @@ proc main() =
         var 
             sniffer: Thread[SuperSocket]
             supSocket = SuperSocket(IP: host, ports: ports)
+        
         createThread(sniffer, sniffer_thread, supSocket)
         sleep(500)
         
-        currentTime = getTime().toUnix() ## Start time
-
         startScanner(host, ports) ## Start scanning
-
-        joinThread(sniffer) ## Wait join sniffer thread
         
         when defined windows:
             remove_rule() ## Remove firewall rule
 
     else:
         ## In default mode use normal async scan
-        currentTime = getTime().toUnix() ## Start time
-
         startScanner(host, ports) ## Start scanning
-        
-    var res = toSeq(openPorts)
-    res = filter(res, proc (x: int): bool = x > 0)
-    printC(success, "Number of open ports: " & $res.len())
-    
-    printC(info, "Done scanning in: " & $(getTime().toUnix() - currentTime) & " Seconds\n") ## End time
+
+    ## Print results
+    printC(stat.open, $countOpen & " ports")
+
+    if current_mode == mode.all:
+        printC(closed, $countClosed & " ports")
+        printC(filtered, $(ports.len - (countOpen + countClosed)))
+
+    echo ""
 
 when isMainModule:
     main()

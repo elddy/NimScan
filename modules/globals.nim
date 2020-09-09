@@ -15,8 +15,14 @@ type
         IP*: cstring
         ports*: seq[int]
 
+    rawStat* = enum
+        FILTERED = 0, OPEN = 1, CLOSED = 2
+
 var
-    openPorts*: array[1..65535, int] ## Because seq is not GC-Safe in threads
+    openPorts*: array[1..65535, int] ## Because seq is not GC-Safe
+    countOpen* = 0
+    countClosed* = 0
+
     ## Default ##
     current_mode*: mode = onlyOpen
     timeout* = 1500 

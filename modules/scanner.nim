@@ -3,12 +3,11 @@
 ]#
 
 when defined windows:
-    ## Use C winsock raw socket sniffer
     import windows_sniffer
 
 import globals, latency
 import asyncnet, asyncdispatch, net
-import random, sequtils, os, strutils
+import random, sequtils, os, strutils, times
 
 randomize()
 
@@ -22,8 +21,7 @@ proc connect(ip: string, port: int) {.async.} =
         if await withTimeout(sock.connect(ip, port.Port), timeout):
             openPorts[port] = port
             printC(stat.open, $port)
-        else:
-            openPorts[port] = -1
+            inc countOpen
     except:
         discard
     finally:
@@ -59,14 +57,12 @@ proc scan_thread(supSocket: SuperSocket) {.thread.} =
 #[
     Sniffer thread
 ]#
-proc sniffer_thread(supSocket: SuperSocket) {.thread.} =
+proc sniffer_thread*(supSocket: SuperSocket) {.thread.} =
     var
         host = supSocket.IP
         port_seq = supSocket.ports
     when defined windows:
-        if startSniffer(host, addr port_seq[0], port_seq.len, $getPrimaryIPAddr()) == 1:
-            printC(error, "Run as administrator")
-            quit(-1)
+        start_sniffer(host, port_seq.toOpenArray(0, port_seq.len() - 1))
 
 #[
     Scanner per host
@@ -75,10 +71,14 @@ proc startScanner*(host: var string, scan_ports: seq[int]) =
     var 
         thr: seq[Thread[SuperSocket]]
         thread: Thread[SuperSocket]
+        currentTime: int64
     
     for i in 1..maxThreads:
         thr.add(thread)
     
+    for p in scan_ports:
+        openPorts[p] = -1
+
     let ms = measure_latency(host)
     if ms == -1:
         printC(warning, "$1 does not respond to ping" % [host])
@@ -91,6 +91,8 @@ proc startScanner*(host: var string, scan_ports: seq[int]) =
     printC(stat.info, "Number of file discriptors per thread -> " & $(scan_ports.len / division).toInt())
     printC(stat.info, "Timeout: " & $timeout & "ms")
     
+    currentTime = getTime().toUnix() ## Start time
+
     for ports in scan_ports.distribute(division):
         block current_ports:
             while true:
@@ -102,5 +104,14 @@ proc startScanner*(host: var string, scan_ports: seq[int]) =
                         break current_ports
 
     thr.joinThreads()
+
+    echo ""
+    for p in scan_ports:
+        if openPorts[p] == rawStat.CLOSED.int and countClosed <= 20:
+            printC(stat.closed, $p)
+        elif openPorts[p] == rawStat.FILTERED.int and (scan_ports.len - (countOpen + countClosed)) <= 20:
+            printC(stat.filtered, $p)
+
     echo ""
     printC(info, "Scanned: " & $scanned)
+    printC(info, "Done scanning in: " & $(getTime().toUnix() - currentTime) & " Seconds\n") ## End time
