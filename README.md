@@ -48,7 +48,6 @@ scanner(char * host, int * ports, int size, char * parameters);
 ```
 
 Options
-
 * host        - IP/HOST to scan
 * ports       - Ports to scan
 * size        - Size of ports array
