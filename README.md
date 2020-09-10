@@ -40,3 +40,44 @@ Show closed/filtered/open using rawsockets
 ```shell
 NimScan.exe 10.0.0.69 -a
 ```
+## C/C++ Library 🧑🏻‍💻
+
+### Guide
+
+#### Exported functions
+```C
+scan(char * host, int * ports, int size);
+scanner(char * host, int * ports, int size, char * parameters);
+```
+
+#### Options
+* host        - IP/HOST to scan
+* ports       - Ports to scan
+* size        - Size of ports array
+* parameters  - Parameters to give for the scanner as mentiond above under Usage
+
+
+#### Create
+```C
+#include <stdio.h>
+
+int main(void)
+{
+    NimMain(); // A MUST! 
+
+    int ports[] = {1, 445, 8080, 3389, 135, 139};
+    int size = sizeof ports / sizeof ports[0];
+    
+    scan(<IP/HOST>, ports, size); // Scan given ports with default configuration (timeout = 1500ms, files = 5000)
+
+    scanner(<IP/HOST>, NULL, 0, "<arguments>"); // Scanning all 65K ports with given arguments
+    return 0;
+}
+```
+
+#### Compile
+
+*Make sure NimScanToC.a is in your program's folder.*
+```shell
+gcc <file>.c -L. -l:NimScanToC.a -w -o NimScan.exe
+```
