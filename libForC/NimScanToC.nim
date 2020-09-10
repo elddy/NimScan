@@ -1,6 +1,6 @@
 #[
     Nim Port Scanner export for C/C++
-    nim c -d:release --noMain --header --deadCodeElim:on --app:lib -o:NimScanToC.so NimScanToC.nim
+    nim c -d:release --noMain --header --deadCodeElim:on --app:staticlib -o:NimScanToC.a NimScanToC.nim
 ]#
 
 when defined windows:
@@ -15,16 +15,25 @@ proc scan(ip: cstring, scan_ports: openArray[cint]) {.exportc, dynlib.} =
         ports: seq[int]
     for p in scan_ports:
         ports.add(p.int)
+
+    validateOptC(host, ports, "-f:5000")
     startScanner(host, ports)
 
 proc scanner(hostC: cstring, portsC: openArray[cint], commandLine: cstring) {.exportc, dynlib.} =
     var 
         host = $hostC
         ports: seq[int]
-        # myTimeout = timeoutC.int
-        # myMaxThreads = maxThreadsC.int
-        # myfdn = fdnC.int
-        # myMode = modeC.int
+
+    countOpen = 0
+    countClosed = 0
+    current_mode = onlyOpen
+    timeout = 1500 
+    file_discriptors_number = 5000 
+    maxThreads = 1
+    scanned = 0
+    toScan = 0
+    current_open_files = 0
+    division = 1
 
     for p in portsC:
         ports.add(p.int)

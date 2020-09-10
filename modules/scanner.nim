@@ -102,6 +102,7 @@ proc startScanner*(host: var string, scan_ports: seq[int]) =
                         createThread(thr[i], scan_thread, supSocket)
                         sleep(timeout)
                         break current_ports
+                    sleep(1)
 
     thr.joinThreads()
 
