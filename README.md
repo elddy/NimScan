@@ -1,7 +1,7 @@
 # 👑 NimScan 👑
 Really fast port scanner (With filtered option - Windows support only)
 
-# Benchmarks
+## Benchmarks
 |  🚩 Flag 🚩 |  🐧 Linux 🐧  |  🗔 Windows 🗔 |
 |    :---:     |     :---:      |     :---:     |
 | -f:10,000    | ~9 Seconds      | ~14 Seconds    |
