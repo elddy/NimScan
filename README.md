@@ -1,7 +1,7 @@
 # 👑 NimScan 👑
 Really fast port scanner (With filtered option - Windows support only)
 
-## Benchmarks
+# Benchmarks
 |  🚩 Flag 🚩 |  🐧 Linux 🐧  |  🗔 Windows 🗔 |
 |    :---:     |     :---:      |     :---:     |
 | -f:10,000    | ~9 Seconds      | ~14 Seconds    |
@@ -39,4 +39,43 @@ NimScan -p:80,443,445 10.0.0.69
 Show closed/filtered/open using rawsockets
 ```shell
 NimScan.exe 10.0.0.69 -a
+```
+## C/C++ Library 🧑🏻‍💻
+Exported functions
+```C
+scan(char * host, int * ports, int size);
+scanner(char * host, int * ports, int size, char * parameters);
+```
+
+Options
+```shell
+host        - IP/HOST to scan
+ports       - Ports to scan
+size        - Size of ports array
+parameters  - Parameters to give for the scanner as mentiond above under Usage
+```
+
+Create your program
+```C
+#include <stdio.h>
+
+int main(void)
+{
+    NimMain(); // A MUST! 
+
+    int ports[] = {1, 445, 8080, 3389, 135, 139};
+    int size = sizeof ports / sizeof ports[0];
+    
+    scan(<IP/HOST>, ports, size); // Scan given ports with default configuration (timeout = 1500ms, files = 5000)
+
+    scanner(<IP/HOST>, NULL, 0, "<arguments>"); // Scanning all 65K ports with timeout of 1,000ms and 10,000 file descriptors
+    return 0;
+}
+```
+
+Compile your program
+
+*Make sure NimScanToC.a is in your program's folder.*
+```shell
+gcc <file>.c -L. -l:NimScanToC.a -w -o NimScan.exe
 ```
