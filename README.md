@@ -48,12 +48,12 @@ scanner(char * host, int * ports, int size, char * parameters);
 ```
 
 Options
-```shell
-host        - IP/HOST to scan
-ports       - Ports to scan
-size        - Size of ports array
-parameters  - Parameters to give for the scanner as mentiond above under Usage
-```
+
+* host        - IP/HOST to scan
+* ports       - Ports to scan
+* size        - Size of ports array
+* parameters  - Parameters to give for the scanner as mentiond above under Usage
+
 
 Create your program
 ```C
