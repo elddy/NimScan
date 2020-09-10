@@ -113,5 +113,5 @@ proc startScanner*(host: var string, scan_ports: seq[int]) =
             printC(stat.filtered, $p)
 
     echo ""
-    printC(info, "Scanned: " & $scanned)
+    # printC(info, "Scanned: " & $scanned)
     printC(info, "Done scanning in: " & $(getTime().toUnix() - currentTime) & " Seconds\n") ## End time
