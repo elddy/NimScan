@@ -99,3 +99,58 @@ proc validateOpt*(host: var string, ports: var seq[int], timeout: var int, numOf
         division = 1
 
 
+proc validateOptC*(host: var string, ports: var seq[int], commandLine: string) =
+    ## Parser for C export
+    var 
+        p = initOptParser(commandLine)
+        threadsSetted = false
+        allSetted = false
+    while true:
+        p.next()
+        case p.kind
+        of cmdEnd: break
+        of cmdShortOption, cmdLongOption:
+            try:
+                case p.key.toLower()
+                of "timeout":
+                    timeout = (p.val).parseInt()
+                of "a", "all":
+                    allSetted = true
+                    current_mode = mode.all
+                of "f", "files":
+                    file_discriptors_number = (p.val).parseInt()
+                    when defined linux:
+                        validateRlimit(file_discriptors_number)
+                of "t", "threads":
+                    threadsSetted = true
+                    maxThreads = (p.val).parseInt()
+                of "h", "--help":
+                    printHelp()
+                    quit(-1)
+                else:
+                    printHelp()
+                    quit(-1)
+            except:
+                printHelp()
+                quit(-1)
+        of cmdArgument:
+            discard
+
+    ## Validate options
+    if allSetted and threadsSetted:
+        printC(error, "Can't use all mode (-a | --all) with custom number of threads (-t | --threads)")
+        quit(-1)
+    
+    elif host == "":
+        printHelp()
+        quit(-1)
+
+    elif ports == @[]:
+        ports = toSeq(1..65535)
+        if current_mode == mode.all:
+            ports = toSeq(1..10000)
+    
+    division = (ports.len() / file_discriptors_number).toInt()
+    
+    if division == 0:
+        division = 1
