@@ -3,11 +3,11 @@ Really fast port scanner (With filtered option - Windows support only)
 
 ## Benchmarks
 
-| ⚙️ Category ⚙️|  👁️ Nmap 👁️ |  🤖 RustScan 🤖      |  ♨️ masscan ♨️ |  👑 NimScan 👑             |
-|    :---:     |     :---:    |     :---:            |      :---:      |      :---:                     |
-| Filtered     | ~107 Seconds  | ❌                  |   ❌           | ~60 Seconds (Windows Only)    |
-| non-filtered | ~25 Seconds  | ~3 Seconds (Linux)   | ~8 Seconds (Linux)| ~7 Seconds (2 threads)   |
-| Dependencies |  Npcap driver |   Nmap              | libpcap driver  | ❌                          | 
+| ⚙️ Category|  👁️ Nmap |  🤖 RustScan      |  ♨️ masscan  |  👑 NimScan          |
+|    :---:     |     :---:    |     :---:            |      :---:      |      :---:                  |
+| Filtered     | ~107 Seconds  | ❌                  |   ❌           | ~60 Seconds (Windows Only)  |
+| non-filtered | ~25 Seconds  | ~3 Seconds (Linux)   | ~8 Seconds (Linux)| ~7 Seconds (2 threads)    |
+| Dependencies |  Npcap driver |   Nmap              | libpcap driver  | No dependencies             | 
 | Can be used as module/library  |    ❌    |   ❌  |      ❌         | ✔️                         |
 
 All bechmarks were performed inside LAN and on 65K ports. 
