@@ -2,12 +2,15 @@
 Really fast port scanner (With filtered option - Windows support only)
 
 ## Benchmarks
-|  🚩 Flag 🚩 |  🐧 Linux 🐧  |  🗔 Windows 🗔 |
-|    :---:     |     :---:      |     :---:     |
-| -f:10,000    | ~9 Seconds      | ~14 Seconds    |
-| -f:5,000     | ~16 Seconds     | ~20 Seconds    |
 
-The results are for 65K ports per scan.
+| ⚙️ Option ⚙️|  👁️ Nmap 👁️ |  🤖 RustScan 🤖      |  ♨️ masscan ♨️ |  👑 NimScan 👑             |
+|    :---:     |     :---:    |     :---:            |      :---:      |      :---:                     |
+| Filtered     | ~107 Seconds  | ❌                  |   ❌           | ~60 Seconds (Windows Only)    |
+| non-filtered | ~25 Seconds  | ~3 Seconds (Linux)   | ~8 Seconds (Linux)| ~7 Seconds (2 threads)   |
+| Dependencies |  Npcap driver |   Nmap              | libpcap driver  | ❌                          | 
+| Can be used as module/library  |    ❌    |   ❌  |      ❌         | ✔️                         |
+
+All bechmarks were performed inside LAN and on 65K ports. 
 
 ## Usage
 ```shell
