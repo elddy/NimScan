@@ -16,7 +16,6 @@ randomize()
 ]#
 proc connect(ip: string, port: int) {.async.} =
     var sock = newAsyncSocket()
-    inc scanned
     try:
         if await withTimeout(sock.connect(ip, port.Port), timeout):
             openPorts[port] = port
@@ -33,10 +32,10 @@ proc connect(ip: string, port: int) {.async.} =
 #[
     Scan ports chunck
 ]#    
-proc scan(ip: string, port_seq: seq[int]) {.async.} =
+proc scan(ip: cstring, port_seq: seq[int]) {.async.} =
     var sockops = newseq[Future[void]](port_seq.len)
     for i in 0..<port_seq.len:
-        sockops[i] = connect(ip, port_seq[i])
+        sockops[i] = connect($ip, port_seq[i])
         when defined windows:
             if current_mode == mode.all:
                 ## In all mode
@@ -52,7 +51,7 @@ proc scan_thread(supSocket: SuperSocket) {.thread.} =
         port_seq = supSocket.ports
 
     shuffle(port_seq) ## Shuffle ports order
-    waitFor scan($host, port_seq)
+    waitFor scan(host, port_seq)
 
 #[
     Sniffer thread
@@ -67,24 +66,26 @@ proc sniffer_thread*(supSocket: SuperSocket) {.thread.} =
 #[
     Scanner per host
 ]#
-proc startScanner*(host: var string, scan_ports: seq[int]) =
+proc startScanner*(host: cstring, scan_ports: seq[int]) =
     var 
         thr: seq[Thread[SuperSocket]]
         thread: Thread[SuperSocket]
         currentTime: int64
     
+    printC(info, "Scanning -> " & $host)
+
     for i in 1..maxThreads:
         thr.add(thread)
     
     for p in scan_ports:
         openPorts[p] = -1
 
-    let ms = measure_latency(host)
-    if ms == -1:
-        printC(warning, "$1 does not respond to ping" % [host])
-    else:
-        timeout = timeout + ms
-
+    if not ignoreAlive:
+        let ms = measure_latency($host)
+        if ms == -1:
+            printC(warning, "$1 does not respond to ping" % [$host])
+        else:
+            timeout = timeout + ms
     toScan = scan_ports.len
 
     printC(stat.info, "Number of threads -> " & $maxThreads)
@@ -113,6 +114,18 @@ proc startScanner*(host: var string, scan_ports: seq[int]) =
         elif openPorts[p] == rawStat.FILTERED.int and (scan_ports.len - (countOpen + countClosed)) <= 20:
             printC(stat.filtered, $p)
 
+    printC(info, "Done scanning " & $host & " in: " & $(getTime().toUnix() - currentTime) & " Seconds\n") ## End time
+    
+    ## Print results
+    printC(stat.open, $countOpen & " ports")
+
+    if current_mode == mode.all:
+        printC(closed, $countClosed & " ports")
+        printC(filtered, $(scan_ports.len - (countOpen + countClosed)))
     echo ""
-    # printC(info, "Scanned: " & $scanned)
-    printC(info, "Done scanning in: " & $(getTime().toUnix() - currentTime) & " Seconds\n") ## End time
+
+    ## Reset after every scan
+    for i in 1..65535:
+        openPorts[i] = 0 
+    countClosed = 0
+    countOpen = 0

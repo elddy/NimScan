@@ -17,6 +17,7 @@ Options:
     -a, --all             Use rawsockets to find filtered/closed/open ports (Takes longer and limited to 10,000 ports).
     -t, --threads         Number of threads per scan.
     -f, --files           File descriptors per thread limit.
+    -i, --ignore          Ignore ping latency check.
     --timeout             Timeout to add to the latency [default: 1500].
     """
 
@@ -34,5 +35,6 @@ Options:
     -a, --all             Use rawsockets to find filtered/closed/open ports (Takes longer and limited to 10,000 ports).
     -t, --threads         Number of threads per scan.
     -f, --files=<limit>   File descriptors per thread limit.
+    -i, --ignore          Ignore ping latency check.
     --timeout=<time>      Timeout to add to the latency [default: 1500].
     """

@@ -2,8 +2,8 @@
     Param parser
 ]#
 
-import globals, help
-import parseopt, strutils, os, sequtils
+import globals, help, ip_seg
+import parseopt, strutils, os, sequtils, net
 
 when defined linux:
     import posix
@@ -26,7 +26,7 @@ proc validatePort(port: int) =
         printC(error, "Not valid port number, Port range: 0 < port < 65536")
         quit(-1)
 
-proc validateOpt*(host: var string, ports: var seq[int], timeout: var int, numOfThreads: var int, fileDis: var int) =
+proc validateOpt*(hosts: var seq[string], ports: var seq[int], timeout: var int, numOfThreads: var int, fileDis: var int) =
     var 
         p = initOptParser(commandLineParams())
         threadsSetted = false
@@ -67,7 +67,11 @@ proc validateOpt*(host: var string, ports: var seq[int], timeout: var int, numOf
                 of "t", "threads":
                     threadsSetted = true
                     numOfThreads = (p.val).parseInt()
-                of "h", "--help":
+                of "i", "ignore":
+                    ## Don't send ping
+                    ignoreAlive = true
+                    printC(warning, "Not sending pings")
+                of "h", "help":
                     printHelp()
                     quit(-1)
                 else:
@@ -77,14 +81,28 @@ proc validateOpt*(host: var string, ports: var seq[int], timeout: var int, numOf
                 printHelp()
                 quit(-1)
         of cmdArgument:
-            host = p.key
-    
+            if (p.key).contains(","):
+                for p in (p.key).split(","):
+                    if isIpAddress(p):
+                        hosts.add(p) 
+
+            elif (p.key).contains("-"):
+                let 
+                    range1 = (p.key).split("-")[0]
+                    range2 = (p.key).split("-")[1]
+                if isIpAddress(range1) and isIpAddress(range2):
+                    hosts = calc_range(range1, range2)
+            elif (p.key).contains("/"):
+                hosts = calc_range(p.key)
+            else:
+                hosts.add(p.key)
+        
     ## Validate options
     if allSetted and threadsSetted:
         printC(error, "Can't use all mode (-a | --all) with custom number of threads (-t | --threads)")
         quit(-1)
     
-    elif host == "":
+    elif hosts.len == 0:
         printHelp()
         quit(-1)
 

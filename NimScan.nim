@@ -11,14 +11,14 @@ import os, net, nativesockets
 proc main() =
     ## Main
     var 
-        host: string
+        hosts: seq[string]
         ports: seq[int]
     
-    validateOpt(host, ports, timeout, maxThreads, file_discriptors_number)
+    validateOpt(hosts, ports, timeout, maxThreads, file_discriptors_number)
 
-    if not isIpAddress host:
-        host = getHostByName(host).addrList[0]
-        printC(info, "Target IP -> " & host) 
+    if hosts.len == 1 and not isIpAddress($hosts[0]):
+        hosts.add(getHostByName($hosts[0]).addrList[0])
+        printC(info, "Target IP -> " & $hosts[0])
 
     if current_mode == mode.all:
         ## In filtered mode use rawsockets
@@ -32,26 +32,22 @@ proc main() =
 
         var 
             sniffer: Thread[SuperSocket]
+            supSocket: SuperSocket
+
+        for host in hosts:
             supSocket = SuperSocket(IP: host, ports: ports)
-        
-        createThread(sniffer, sniffer_thread, supSocket)
-        sleep(500)
-        
-        startScanner(host, ports) ## Start scanning
+            createThread(sniffer, sniffer_thread, supSocket)
+            sleep(500)
+            
+            startScanner(host, ports) ## Start scanning
         
         when defined windows:
             remove_rule() ## Remove firewall rule
-
+        
     else:
         ## In default mode use normal async scan
-        startScanner(host, ports) ## Start scanning
-
-    ## Print results
-    printC(stat.open, $countOpen & " ports")
-
-    if current_mode == mode.all:
-        printC(closed, $countClosed & " ports")
-        printC(filtered, $(ports.len - (countOpen + countClosed)))
+        for host in hosts:
+            startScanner(host, ports) ## Start scanning
 
     echo ""
 
