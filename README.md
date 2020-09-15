@@ -15,28 +15,29 @@ All bechmarks were performed inside LAN and on 65K ports.
 ## Usage
 ```shell
 Usage:
-    NimScan -p:<portX>-<portY> <host> [--timeout=<time>] [--files=<limit of file descriptors>] [-a]
-    NimScan -p:<port> <host>
-    NimScan -p:<port1>,<port2>,<portN> <host>
+    NimScan <host | IPs> -p:<portX>-<portY> [--timeout=<time>] [--files=<limit of file descriptors>] [-a]
+    NimScan <host | IPs> -p:<port>
+    NimScan <host | IPs> -p:<port1>,<port2>,<portN>
     NimScan (-h | --help)
 Options:
     -h, --help            Show this screen.
     -p, --ports           Ports to scan. [default: 1-65,535]
-    -a, --all             Use rawsockets to find filtered/closed/open ports (Takes longer and limited to 10,000 ports).       
+    -a, --all             Use rawsockets to find filtered/closed/open ports (Takes longer and limited to 10,000 ports).
     -t, --threads         Number of threads per scan.
     -f, --files=<limit>   File descriptors per thread limit.
+    -i, --ignore          Ignore ping latency check.
     --timeout=<time>      Timeout to add to the latency [default: 1500].
 ```
 ## Examples
 Scan range between 1 to 5000 ports
 
 ```shell
-NimScan -p:1-5000 10.0.0.69
+NimScan 10.0.0.0/24 -p:1-5000 
 ```
 
 Scan specific ports
 ```shell
-NimScan -p:80,443,445 10.0.0.69
+NimScan 10.0.0.1-10.0.0.10 -p:80,443,445
 ```
 
 Show closed/filtered/open using rawsockets
