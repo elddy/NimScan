@@ -70,7 +70,20 @@ proc validateOpt*(hosts: var seq[string], ports: var seq[int], timeout: var int,
                 of "i", "ignore":
                     ## Don't send ping
                     ignoreAlive = true
-                    printC(warning, "Not sending pings (-i)")
+                    printC(info, "Not sending pings (-i | --ignore)\n")
+                of "v", "verbose":
+                    ## Verbose mode
+                    verbose = true
+                    printC(info, "In verbose mode (-v | --verbose)\n")
+                of "o", "out", "output":
+                    ## Output to CSV
+                    csvFile = (p.val)
+                    if csvFile == "":
+                        csvFile = "results.csv"
+                    if splitFile(csvFile).ext != ".csv":
+                        csvFile = csvFile & ".csv"
+                    printC(info, "Output file: " & csvFile & "\n")
+                    output = true
                 of "h", "help":
                     printHelp()
                     quit(-1)

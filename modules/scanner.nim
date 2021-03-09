@@ -5,9 +5,9 @@
 when defined windows:
     import windows_sniffer
 
-import globals, latency
+import globals, latency, toCsv
 import asyncnet, asyncdispatch, net, nativesockets
-import random, sequtils, os, strutils, times
+import random, sequtils, os, strutils, times, terminal
 
 randomize()
 
@@ -60,6 +60,11 @@ proc sniffer_thread*(supSocket: SuperSocket) {.thread.} =
     var
         host = supSocket.IP
         port_seq = supSocket.ports
+    if not isIpAddress($host):
+        try:
+            host = getHostByName($host).addrList[0]
+        except:
+            host = ""
     when defined windows:
         start_sniffer(host, port_seq.toOpenArray(0, port_seq.len() - 1))
 
@@ -70,7 +75,6 @@ proc startScanner*(host: cstring, scan_ports: seq[int]) =
     var 
         thr: seq[Thread[SuperSocket]]
         thread: Thread[SuperSocket]
-        currentTime: int64
         countFiltered: int
         ip: string
         hostname: string
@@ -97,8 +101,10 @@ proc startScanner*(host: cstring, scan_ports: seq[int]) =
         ## Initial checks not ignored
         ms = measure_latency($host)
         if ms == -1:
-            printC(warning, "$1 does not respond to ping" % [$host])
+            if verbose:
+                printC(warning, "$1 does not respond to ping" % [$host])
         else:
+            # printC(success, "$1 responded to ping: $2ms\n" % [$host, $ms])
             timeout = timeout + ms
         
         if hostname == "":
@@ -110,11 +116,14 @@ proc startScanner*(host: cstring, scan_ports: seq[int]) =
     
     toScan = scan_ports.len
 
-    printHeader(ip, hostname, ms) ## Header
+    if verbose:
+        printHeader(ip, hostname, ms) ## Header
 
     for ports in scan_ports.distribute(division):
+        ## Start scanning
         block current_ports:
             while true:
+                printCurrentScan($host)
                 for i in low(thr)..high(thr):
                     if not thr[i].running:
                         let supSocket = SuperSocket(IP: host, ports: ports)    
@@ -122,10 +131,10 @@ proc startScanner*(host: cstring, scan_ports: seq[int]) =
                         sleep(timeout)
                         break current_ports
                     sleep(1)
+    stdout.eraseLine()
 
     thr.joinThreads()
-
-    echo ""
+    
     for p in scan_ports:
         if openPorts[p] == rawStat.CLOSED.int and countClosed <= 20:
             printPort(stat.closed, $host, p)
@@ -137,8 +146,28 @@ proc startScanner*(host: cstring, scan_ports: seq[int]) =
     else:
         countClosed = scan_ports.len - countOpen
 
-    ## Print footer (results)
-    printFooter(countOpen, countClosed, countFiltered, $host)
+    if verbose:
+        printFooter(countOpen, countClosed, countFiltered, $host) ## Print footer (results)
+
+    var
+        all_open, all_closed, all_filtered: seq[int]
+
+    for i in 1..65535:
+        if current_mode == mode.all:
+            if openPorts[i] == rawStat.CLOSED.int:
+                all_closed.add(i)
+            elif openPorts[i] == rawStat.FILTERED.int:
+                all_filtered.add(i)
+        else:
+            if openPorts[i] == 0:
+                all_closed.add(i)
+        if openPorts[i] == i:
+            all_open.add(i)
+    
+    if output:
+        ## Output results to CSV
+        let latency = $ms & "ms"
+        toCsv(ip, hostname, latency, all_open, all_closed, all_filtered, csvFile)
 
     ## Reset after every scan
     for i in 1..65535:

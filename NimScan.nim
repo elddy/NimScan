@@ -39,7 +39,6 @@ proc main() =
             supSocket = SuperSocket(IP: host, ports: ports)
             createThread(sniffer, sniffer_thread, supSocket)
             sleep(500)
-            
             startScanner(host, ports) ## Start scanning
         
         when defined windows:
@@ -51,7 +50,7 @@ proc main() =
             startScanner(host, ports) ## Start scanning
 
     echo ""
-    printC(info, "Done in: " & $(getTime().toUnix() - currentTime) & " Seconds\n") ## End time
+    printC(info, "NimScan finished in: " & $(getTime().toUnix() - currentTime) & " Seconds\n") ## End time
 
 when isMainModule:
     main()

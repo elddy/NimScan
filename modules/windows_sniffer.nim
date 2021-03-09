@@ -79,11 +79,9 @@ proc check_port(tcpheader: TCP_HDR) =
             openPorts[src_port] = rawStat.CLOSED.int
             inc countClosed
 
-
 proc PrintTcpPacket*(buffer: array[65536, char], size: int, iphdr: IPV4_HDR) =
     var ip_addr: winlean.InAddr
     ip_addr.s_addr = iphdr.ip_srcaddr
-
     if winlean.inet_ntoa(ip_addr) == $target:
         var 
             iphdrlen = (iphdr.ip_header_len.int * 4)
@@ -118,7 +116,9 @@ proc StartSniffing(snifferSocket: SOCKET) =
 
 proc start_sniffer*(ip: cstring, port_seq: openArray[int]) =
     target = $ip
-    var wsa: WSADATA
+    var 
+        wsa: WSADATA
+        myIP = $(getPrimaryIPAddr().address_v4.join("."))
 
     if WSAStartup(MAKEWORD(2,2), &wsa) != 0:
         printC(error, "WSAStartup failed: " & $GetLastError())
@@ -131,8 +131,8 @@ proc start_sniffer*(ip: cstring, port_seq: openArray[int]) =
     if snifferSocket == INVALID_SOCKET:
         printC(error, "Failed to create socket: " & $GetLastError())
         quit(-1)
-
-    dest.sin_addr.S_addr = inet_addr($getPrimaryIPAddr())
+    
+    dest.sin_addr.S_addr = inet_addr(myIP)
     dest.sin_port = 0
     dest.sin_family = AF_INET
 

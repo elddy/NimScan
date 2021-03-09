@@ -2,7 +2,7 @@
     Globals
 ]#
 
-import terminal, terminaltables, strutils
+import terminal, strutils
 
 type 
     stat* = enum ## Status
@@ -32,6 +32,9 @@ var
     toScan* = 0
     current_open_files* = 0
     division* = 1 ## Division for port chuncks
+    verbose* = false
+    output* = false
+    csvFile* = ""
 
 #[
     Prints nice and all
@@ -94,9 +97,17 @@ proc printHeader*(ip, hostname: string, latency: int) =
     Prints port
 ]#
 proc printPort*(STATUS: stat, ip: string, port: int) =
+    stdout.eraseLine()
     let text = ip & ":"
     stdout.styledWrite(fgMagenta, "==> ")
     stdout.write(text); printC(STATUS, $port)
+
+proc printCurrentScan*(ip: string) =
+    stdout.eraseLine()
+    stdout.write("--------> ")
+    stdout.styledWrite(fgMagenta, ip)
+    stdout.write(" <--------")
+    stdout.flushFile
 
 #[
     Prints footer for every host
@@ -107,9 +118,9 @@ proc printFooter*(countOpen, countClosed, countFiltered: int, host: string) =
         closed_footer = "Closed: " & $countClosed
         filtered_footer = "Filtered: " & $countFiltered
         header_len = open_footer.len + closed_footer.len + filtered_footer.len + 8
-        underscore = repeat('_', header_len)
         equals = repeat('=', header_len)
     
+    echo ""
     stdout.write("| Open: ")
     stdout.styledWrite(fgGreen, $countOpen)
     stdout.write(" | Closed: ")
