@@ -6,7 +6,7 @@ when defined windows:
     import windows_sniffer
 
 import globals, latency
-import asyncnet, asyncdispatch, net
+import asyncnet, asyncdispatch, net, nativesockets
 import random, sequtils, os, strutils, times
 
 randomize()
@@ -19,7 +19,7 @@ proc connect(ip: string, port: int) {.async.} =
     try:
         if await withTimeout(sock.connect(ip, port.Port), timeout):
             openPorts[port] = port
-            printC(stat.open, $port)
+            printPort(stat.open, ip, port)
             inc countOpen
     except:
         discard
@@ -71,8 +71,21 @@ proc startScanner*(host: cstring, scan_ports: seq[int]) =
         thr: seq[Thread[SuperSocket]]
         thread: Thread[SuperSocket]
         currentTime: int64
+        countFiltered: int
+        ip: string
+        hostname: string
+        ms: int
     
-    printC(info, "Scanning -> " & $host)
+    if isIpAddress($host):
+        ip = $host
+    else:
+        ## Resolve Name
+        hostname = $host
+        try:
+            ip = getHostByName(hostname).addrList[0]
+        except:
+            printC(error, "Unable to resolve " & hostname)
+            return
 
     for i in 1..maxThreads:
         thr.add(thread)
@@ -81,18 +94,23 @@ proc startScanner*(host: cstring, scan_ports: seq[int]) =
         openPorts[p] = -1
 
     if not ignoreAlive:
-        let ms = measure_latency($host)
+        ## Initial checks not ignored
+        ms = measure_latency($host)
         if ms == -1:
             printC(warning, "$1 does not respond to ping" % [$host])
         else:
             timeout = timeout + ms
+        
+        if hostname == "":
+            ## Resolve IP
+            try:
+                hostname = getHostByAddr(ip).addrList[0]
+            except:
+                hostname = ""
+    
     toScan = scan_ports.len
 
-    printC(stat.info, "Number of threads -> " & $maxThreads)
-    printC(stat.info, "Number of file discriptors per thread -> " & $(scan_ports.len / division).toInt())
-    printC(stat.info, "Timeout: " & $timeout & "ms")
-    
-    currentTime = getTime().toUnix() ## Start time
+    printHeader(ip, hostname, ms) ## Header
 
     for ports in scan_ports.distribute(division):
         block current_ports:
@@ -110,19 +128,17 @@ proc startScanner*(host: cstring, scan_ports: seq[int]) =
     echo ""
     for p in scan_ports:
         if openPorts[p] == rawStat.CLOSED.int and countClosed <= 20:
-            printC(stat.closed, $p)
+            printPort(stat.closed, $host, p)
         elif openPorts[p] == rawStat.FILTERED.int and (scan_ports.len - (countOpen + countClosed)) <= 20:
-            printC(stat.filtered, $p)
-
-    printC(info, "Done scanning " & $host & " in: " & $(getTime().toUnix() - currentTime) & " Seconds\n") ## End time
-    
-    ## Print results
-    printC(stat.open, $countOpen & " ports")
+            printPort(stat.filtered, $host, p)
 
     if current_mode == mode.all:
-        printC(closed, $countClosed & " ports")
-        printC(filtered, $(scan_ports.len - (countOpen + countClosed)))
-    echo ""
+        countFiltered = scan_ports.len - (countOpen + countClosed)
+    else:
+        countClosed = scan_ports.len - countOpen
+
+    ## Print footer (results)
+    printFooter(countOpen, countClosed, countFiltered, $host)
 
     ## Reset after every scan
     for i in 1..65535:

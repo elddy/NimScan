@@ -70,7 +70,7 @@ proc validateOpt*(hosts: var seq[string], ports: var seq[int], timeout: var int,
                 of "i", "ignore":
                     ## Don't send ping
                     ignoreAlive = true
-                    printC(warning, "Not sending pings")
+                    printC(warning, "Not sending pings (-i)")
                 of "h", "help":
                     printHelp()
                     quit(-1)
@@ -83,8 +83,7 @@ proc validateOpt*(hosts: var seq[string], ports: var seq[int], timeout: var int,
         of cmdArgument:
             if (p.key).contains(","):
                 for p in (p.key).split(","):
-                    if isIpAddress(p):
-                        hosts.add(p) 
+                    hosts.add(p)
 
             elif (p.key).contains("-"):
                 let 

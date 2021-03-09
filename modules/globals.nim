@@ -2,7 +2,7 @@
     Globals
 ]#
 
-import terminal
+import terminal, terminaltables, strutils
 
 type 
     stat* = enum ## Status
@@ -10,7 +10,7 @@ type
     
     mode* = enum ## Mode (all = open/closed/filtered)
         all, onlyOpen 
-    
+
     SuperSocket* = object ## Pass to threads
         IP*: cstring
         ports*: seq[int]
@@ -59,3 +59,85 @@ proc printC*(STATUS: stat, text: string) =
     of info:
         stdout.styledWrite(fgBlue, "[*] ")
         stdout.write text, "\n"
+
+#[
+    Prints header for every host
+]#
+proc printHeader*(ip, hostname: string, latency: int) =
+    var 
+        host = hostname
+        lat: string
+    if host == "" or host == ip:
+        host = "N/A"
+    if latency == -1:
+        lat = "N/A"
+    else:
+        lat = $latency & "ms"
+    let 
+        ip_header = "IP: " & ip
+        host_header = "Host: " & host
+        latency_header = "Latency: " & lat
+        header_len = ip_header.len + host_header.len + latency_header.len + 8
+        underscore = repeat('_', header_len)
+    
+    echo " ", underscore                                       
+    stdout.write("| IP: ")
+    stdout.styledWrite(fgMagenta, ip)
+    stdout.write(" | Host: ")
+    stdout.styledWrite(fgMagenta, host)
+    stdout.write(" | Latency: ")
+    stdout.styledWrite(fgMagenta, lat)
+    echo " |"
+    echo ""
+
+#[
+    Prints port
+]#
+proc printPort*(STATUS: stat, ip: string, port: int) =
+    let text = ip & ":"
+    stdout.styledWrite(fgMagenta, "==> ")
+    stdout.write(text); printC(STATUS, $port)
+
+#[
+    Prints footer for every host
+]#
+proc printFooter*(countOpen, countClosed, countFiltered: int, host: string) =
+    let
+        open_footer = "Open: " & $countOpen
+        closed_footer = "Closed: " & $countClosed
+        filtered_footer = "Filtered: " & $countFiltered
+        header_len = open_footer.len + closed_footer.len + filtered_footer.len + 8
+        underscore = repeat('_', header_len)
+        equals = repeat('=', header_len)
+    
+    stdout.write("| Open: ")
+    stdout.styledWrite(fgGreen, $countOpen)
+    stdout.write(" | Closed: ")
+    stdout.styledWrite(fgRed, $countClosed)
+    stdout.write(" | Filtered: ")
+    stdout.styledWrite(fgYellow, $countFiltered)
+    echo " |"
+    echo " ", equals
+    echo ""
+
+proc printBanner*() =
+    let banner1 = """ 
+    )              (                      
+ ( /(              )\ )                   
+ )\()) (      )   (()/(         )         
+((_)\  )\    (     /(_)) (   ( /(   (     
+ _((_)((_)   )\  '(_))   )\  )(_))  )\ )  
+"""
+    let banner2 = """
+| \| | (_) _((_)) / __| ((_)((_)_  _(_/(  
+| .` | | || '  \()\__ \/ _| / _` || ' \)) 
+|_|\_| |_||_|_|_| |___/\__| \__,_||_||_|                                        
+    """
+    let speech = """
+
+    Fast Port Scanner Written In Nim
+    """
+    stdout.styledWrite(fgRed, banner1)
+    stdout.styledWrite(fgYellow, banner2)
+    stdout.styledWrite(fgYellow, speech)
+    echo ""
