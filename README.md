@@ -1,6 +1,8 @@
 # 👑 NimScan 👑
 Really fast port scanner (With filtered option - Windows support only)
 
+![Administrator_ Command Prompt 2021-03-09 18-01-21](https://user-images.githubusercontent.com/69467775/110504297-b1a2fb00-8105-11eb-866e-0c438cc1d1a0.gif)
+
 ## Benchmarks
 
 | ⚙️ Category|  👁️ Nmap |  🤖 RustScan      |  ♨️ masscan  |  👑 NimScan          |
