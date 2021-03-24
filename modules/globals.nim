@@ -2,7 +2,7 @@
     Globals
 ]#
 
-import terminal, strutils
+import terminal, strutils, OSDiscovery
 
 type 
     stat* = enum ## Status
@@ -35,6 +35,7 @@ var
     verbose* = false
     output* = false
     csvFile* = ""
+    os_discovery* = false
 
 #[
     Prints nice and all
@@ -130,6 +131,15 @@ proc printFooter*(countOpen, countClosed, countFiltered: int, host: string) =
     echo " |"
     echo " ", equals
     echo ""
+
+proc printOSInfo*(info: TARGET_INFO) =
+    echo ""
+    stdout.styledWrite(fgMagenta, "--------> "); stdout.write("SMB OS Discovery"); stdout.styledWrite(fgMagenta, " <--------\n\n")
+    stdout.styledWrite(fgMagenta, "====| "); stdout.write("OS Version: "); stdout.styledWrite(fgCyan, info.os_version); stdout.write("\n")
+    stdout.styledWrite(fgMagenta, "====| "); stdout.write("NetBIOS Domain Name: "); stdout.styledWrite(fgCyan, info.netBios_domain); stdout.write("\n")
+    stdout.styledWrite(fgMagenta, "====| "); stdout.write("NetBIOS Computer Name: "); stdout.styledWrite(fgCyan, info.netBios_computer); stdout.write("\n")
+    stdout.styledWrite(fgMagenta, "====| "); stdout.write("DNS Domain Name: "); stdout.styledWrite(fgCyan, info.dns_domain); stdout.write("\n")
+    stdout.styledWrite(fgMagenta, "====| "); stdout.write("DNS Computer Name: "); stdout.styledWrite(fgCyan, info.dns_computer); stdout.write("\n")
 
 proc printBanner*() =
     let banner1 = """ 

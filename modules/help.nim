@@ -16,11 +16,12 @@ Options:
     -p, --ports           Ports to scan. [default: 1-65,535]
     -a, --all             Use rawsockets to find filtered/closed/open ports (Takes longer and limited to 10,000 ports).
     -t, --threads         Number of threads per scan.
-    -f, --files           File descriptors per thread limit.
+    -f, --files=<limit>   File descriptors per thread limit.
     -i, --ignore          Ignore ping latency check.
     -v, --verbose         Verbose mode.
     -o, --output          CSV for output (default: result.csv)
-    --timeout             Timeout to add to the latency [default: 1500].
+    --os                  SMB-OS-Discovery (Nim-OSDiscovery)
+    --timeout=<time>      Timeout to add to the latency [default: 1500].
     """
 
     when defined linux:
@@ -39,5 +40,6 @@ Options:
     -i, --ignore          Ignore ping latency check.
     -v, --verbose         Verbose mode.
     -o, --output          CSV for output (default: result.csv)
+    --os                  SMB-OS-Discovery (Nim-OSDiscovery)
     --timeout=<time>      Timeout to add to the latency [default: 1500].
     """

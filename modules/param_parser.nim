@@ -84,6 +84,10 @@ proc validateOpt*(hosts: var seq[string], ports: var seq[int], timeout: var int,
                         csvFile = csvFile & ".csv"
                     printC(info, "Output file: " & csvFile & "\n")
                     output = true
+                of "os":
+                    ## SMB-OS-Discovery
+                    os_discovery = true
+                    ports.add(445)
                 of "h", "help":
                     printHelp()
                     quit(-1)
@@ -108,7 +112,7 @@ proc validateOpt*(hosts: var seq[string], ports: var seq[int], timeout: var int,
                 hosts = calc_range(p.key)
             else:
                 hosts.add(p.key)
-        
+
     ## Validate options
     if allSetted and threadsSetted:
         printC(error, "Can't use all mode (-a | --all) with custom number of threads (-t | --threads)")
@@ -122,12 +126,12 @@ proc validateOpt*(hosts: var seq[string], ports: var seq[int], timeout: var int,
         ports = toSeq(1..65535)
         if current_mode == mode.all:
             ports = toSeq(1..10000)
-    
+            
+    ports = deduplicate(ports)
     division = (ports.len() / fileDis).toInt()
     
     if division == 0:
         division = 1
-
 
 proc validateOptC*(host: var string, ports: var seq[int], commandLine: string) =
     ## Parser for C export

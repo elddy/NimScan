@@ -5,7 +5,7 @@
 when defined windows:
     import windows_sniffer
 
-import globals, latency, toCsv
+import globals, latency, toCsv, OSDiscovery
 import asyncnet, asyncdispatch, net, nativesockets
 import random, sequtils, os, strutils, times, terminal
 
@@ -28,6 +28,7 @@ proc connect(ip: string, port: int) {.async.} =
             sock.close()
         except:
             discard
+
 
 #[
     Scan ports chunck
@@ -110,7 +111,7 @@ proc startScanner*(host: cstring, scan_ports: seq[int]) =
         if hostname == "":
             ## Resolve IP
             try:
-                hostname = getHostByAddr(ip).addrList[0]
+                hostname = getHostByAddr(ip).name
             except:
                 hostname = ""
     
@@ -129,12 +130,16 @@ proc startScanner*(host: cstring, scan_ports: seq[int]) =
                         let supSocket = SuperSocket(IP: host, ports: ports)    
                         createThread(thr[i], scan_thread, supSocket)
                         sleep(timeout)
-                        break current_ports
-                    sleep(1)
+                        break current_ports   
+                sleep(1)
     stdout.eraseLine()
 
     thr.joinThreads()
     
+    if openPorts[445] != 0 and os_discovery:
+        let info = runOSDiscovery(ip)
+        printOSInfo(info)
+
     for p in scan_ports:
         if openPorts[p] == rawStat.CLOSED.int and countClosed <= 20:
             printPort(stat.closed, $host, p)

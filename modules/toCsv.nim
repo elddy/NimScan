@@ -1,3 +1,7 @@
+#[
+    Output to CSV
+]#
+
 import strutils, os, globals
 
 type Scan = object

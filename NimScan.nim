@@ -1,5 +1,6 @@
 #[
-    Nim Port Scanner
+    NimScan
+    https://github.com/elddy/NimScan
 ]#
 
 when defined windows:
@@ -18,7 +19,9 @@ proc main() =
     printBanner() ## Print banner
 
     validateOpt(hosts, ports, timeout, maxThreads, file_discriptors_number)
-
+    when defined linux:
+        validateRlimit(file_discriptors_number)
+    
     currentTime = getTime().toUnix() ## Start time
 
     if current_mode == mode.all:
