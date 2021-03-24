@@ -108,6 +108,8 @@ proc validateOpt*(hosts: var seq[string], ports: var seq[int], timeout: var int,
                     range2 = (p.key).split("-")[1]
                 if isIpAddress(range1) and isIpAddress(range2):
                     hosts = calc_range(range1, range2)
+                else:
+                    hosts.add(p.key)
             elif (p.key).contains("/"):
                 hosts = calc_range(p.key)
             else:

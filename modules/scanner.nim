@@ -100,10 +100,11 @@ proc startScanner*(host: cstring, scan_ports: seq[int]) =
 
     if not ignoreAlive:
         ## Initial checks not ignored
-        ms = measure_latency($host)
+        ms = measure_latency(ip)
         if ms == -1:
             if verbose:
-                printC(warning, "$1 does not respond to ping" % [$host])
+                printC(warning, "$1 does not respond to ping" % [ip])
+            return
         else:
             # printC(success, "$1 responded to ping: $2ms\n" % [$host, $ms])
             timeout = timeout + ms
@@ -124,27 +125,27 @@ proc startScanner*(host: cstring, scan_ports: seq[int]) =
         ## Start scanning
         block current_ports:
             while true:
-                printCurrentScan($host)
+                # printCurrentScan($host)
                 for i in low(thr)..high(thr):
                     if not thr[i].running:
-                        let supSocket = SuperSocket(IP: host, ports: ports)    
+                        let supSocket = SuperSocket(IP: ip, ports: ports)    
                         createThread(thr[i], scan_thread, supSocket)
-                        sleep(timeout)
+                        # sleep(timeout)
                         break current_ports   
                 sleep(1)
     stdout.eraseLine()
 
     thr.joinThreads()
     
-    if openPorts[445] != 0 and os_discovery:
-        let info = runOSDiscovery(ip)
+    if openPorts[445] == 445 and os_discovery:
+        let info = runOSDiscovery(ip, timeout)
         printOSInfo(info)
 
     for p in scan_ports:
         if openPorts[p] == rawStat.CLOSED.int and countClosed <= 20:
-            printPort(stat.closed, $host, p)
+            printPort(stat.closed, ip, p)
         elif openPorts[p] == rawStat.FILTERED.int and (scan_ports.len - (countOpen + countClosed)) <= 20:
-            printPort(stat.filtered, $host, p)
+            printPort(stat.filtered, ip, p)
 
     if current_mode == mode.all:
         countFiltered = scan_ports.len - (countOpen + countClosed)

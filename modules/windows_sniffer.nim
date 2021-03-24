@@ -107,7 +107,7 @@ proc StartSniffing(snifferSocket: SOCKET) =
         data_size: int32
 
     while true:
-        data_size = recvfrom(snifferSocket, buffer, 65536.int32, 0.int32, addr saddr, addr saddr_size)
+        data_size = recvfrom(snifferSocket, addr buffer, 65536.int32, 0.int32, addr saddr, addr saddr_size)
         if data_size > 0:
             buffer.ProcessPacket(data_size)
         else:
