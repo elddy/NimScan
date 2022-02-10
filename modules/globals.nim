@@ -103,13 +103,11 @@ proc printHeader*(ip, hostname: string, latency: int) =
     Prints port
 ]#
 proc printPort*(STATUS: stat, ip: string, port: int) =
-    stdout.eraseLine()
     let text = ip & ":"
     stdout.styledWrite(fgMagenta, "==> ")
     stdout.write(text); printC(STATUS, $port)
 
 proc printCurrentScan*(ip: string) =
-    stdout.eraseLine()
     stdout.write("--------> ")
     stdout.styledWrite(fgMagenta, ip)
     stdout.write(" <--------")

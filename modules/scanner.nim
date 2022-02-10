@@ -130,7 +130,6 @@ proc startScanner*(host: cstring, scan_ports: seq[int]) =
                         # sleep(timeout)
                         break current_ports   
                 sleep(1)
-    stdout.eraseLine()
 
     thr.joinThreads()
     
