@@ -3,13 +3,15 @@
     nim c -d:release --noMain --header --deadCodeElim:on --app:staticlib -o:NimScanToC.a NimScanToC.nim
 ]#
 
+{.passL: "-Wl,--dynamicbase".}
+
 when defined windows:
     import ../modules/windows_sniffer
 
 import ../modules/[globals, param_parser, scanner]
 import os, net, nativesockets
 
-proc scan(ip: cstring, scan_ports: openArray[cint]) {.exportc, dynlib.} =
+proc scan(ip: cstring, scan_ports: openArray[cint]) {.stdcall, exportc, dynlib.} =
     var 
         host = $ip
         ports: seq[int]
@@ -19,7 +21,7 @@ proc scan(ip: cstring, scan_ports: openArray[cint]) {.exportc, dynlib.} =
     validateOptC(host, ports, "-f:5000")
     startScanner(host, ports)
 
-proc scanner(hostC: cstring, portsC: openArray[cint], commandLine: cstring) {.exportc, dynlib.} =
+proc scanner(hostC: cstring, portsC: openArray[cint], commandLine: cstring) {.stdcall, exportc, dynlib.} =
     var 
         host = $hostC
         ports: seq[int]
@@ -30,7 +32,6 @@ proc scanner(hostC: cstring, portsC: openArray[cint], commandLine: cstring) {.ex
     timeout = 1500 
     file_discriptors_number = 5000 
     maxThreads = 1
-    scanned = 0
     toScan = 0
     current_open_files = 0
     division = 1
@@ -71,10 +72,10 @@ proc scanner(hostC: cstring, portsC: openArray[cint], commandLine: cstring) {.ex
         startScanner(host, ports) ## Start scanning
 
     ## Print results
-    printC(stat.open, $countOpen & " ports")
+    # printC(stat.open, $countOpen & " ports")
 
-    if current_mode == mode.all:
-        printC(closed, $countClosed & " ports")
-        printC(filtered, $(ports.len - (countOpen + countClosed)))
+    # if current_mode == mode.all:
+    #     printC(closed, $countClosed & " ports")
+    #     printC(filtered, $(ports.len - (countOpen + countClosed)))
 
     echo ""

@@ -2,7 +2,12 @@
     Globals
 ]#
 
-import terminal, strutils, OSDiscovery
+when not (compiles do: import OSDiscovery):
+    static: echo "No module: OSDiscovery, install via nimble:\n"
+    static: echo "nimble install https://github.com/elddy/Nim-OSDiscovery\n"
+
+import OSDiscovery
+import terminal, strutils
 
 type 
     stat* = enum ## Status

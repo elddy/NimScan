@@ -7,8 +7,9 @@ when defined linux:
     import posix
 when defined windows:
     import winim/inc/winsock
+    import winim
 
-proc calc_range*(first: string, last: string): seq[string] =
+proc calc_range*(first: LPCSTR, last: string): seq[string] =
     var
         first_ipAddr: InAddr
         last_ipAddr: InAddr

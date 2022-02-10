@@ -11,18 +11,18 @@ from winlean import inet_ntoa, InAddr
 
 type
   IPV4_HDR {.bycopy.} = object
-    ip_header_len {.bitsize: 4.}: cuchar ##  4-bit header length (in 32-bit words) normally=5 (Means 20 Bytes may be 24 also)
-    ip_version {.bitsize: 4.}: cuchar ##  4-bit IPv4 version
-    ip_tos: cuchar            ##  IP type of service
+    ip_header_len {.bitsize: 4.}: char ##  4-bit header length (in 32-bit words) normally=5 (Means 20 Bytes may be 24 also)
+    ip_version {.bitsize: 4.}: char ##  4-bit IPv4 version
+    ip_tos: char            ##  IP type of service
     ip_total_length: cushort  ##  Total length
     ip_id: cushort            ##  Unique identifier
-    ip_frag_offset {.bitsize: 5.}: cuchar ##  Fragment offset field
-    ip_more_fragment {.bitsize: 1.}: cuchar
-    ip_dont_fragment {.bitsize: 1.}: cuchar
-    ip_reserved_zero {.bitsize: 1.}: cuchar
-    ip_frag_offset1: cuchar   ## fragment offset
-    ip_ttl: cuchar            ##  Time to live
-    ip_protocol: cuchar       ##  Protocol(TCP,UDP etc)
+    ip_frag_offset {.bitsize: 5.}: char ##  Fragment offset field
+    ip_more_fragment {.bitsize: 1.}: char
+    ip_dont_fragment {.bitsize: 1.}: char
+    ip_reserved_zero {.bitsize: 1.}: char
+    ip_frag_offset1: char   ## fragment offset
+    ip_ttl: char            ##  Time to live
+    ip_protocol: char       ##  Protocol(TCP,UDP etc)
     ip_checksum: cushort      ##  IP checksum
     ip_srcaddr: cuint         ##  Source address
     ip_destaddr: cuint        ##  Source address
@@ -32,20 +32,20 @@ type
     dest_port: cushort       ##  destination port
     sequence: cuint           ##  sequence number - 32 bits
     acknowledge: cuint        ##  acknowledgement number - 32 bits
-    ns {.bitsize: 1.}: cuchar   ## Nonce Sum Flag Added in RFC 3540.
-    reserved_part1 {.bitsize: 3.}: cuchar ## according to rfc
-    data_offset {.bitsize: 4.}: cuchar ## The number of 32-bit words in the TCP header.
+    ns {.bitsize: 1.}: char   ## Nonce Sum Flag Added in RFC 3540.
+    reserved_part1 {.bitsize: 3.}: char ## according to rfc
+    data_offset {.bitsize: 4.}: char ## The number of 32-bit words in the TCP header.
                                     ## 	This indicates where the data begins.
                                     ## 	The length of the TCP header is always a multiple
                                     ## 	of 32 bits.
-    fin{.bitsize: 1.}: cuchar  ## Finish Flag
-    syn {.bitsize: 1.}: cuchar  ## Synchronise Flag
-    rst {.bitsize: 1.}: cuchar  ## Reset Flag
-    psh {.bitsize: 1.}: cuchar  ## Push Flag
-    ack {.bitsize: 1.}: cuchar  ## Acknowledgement Flag
-    urg {.bitsize: 1.}: cuchar  ## Urgent Flag
-    ecn {.bitsize: 1.}: cuchar  ## ECN-Echo Flag
-    cwr {.bitsize: 1.}: cuchar  ## Congestion Window Reduced Flag
+    fin{.bitsize: 1.}: char  ## Finish Flag
+    syn {.bitsize: 1.}: char  ## Synchronise Flag
+    rst {.bitsize: 1.}: char  ## Reset Flag
+    psh {.bitsize: 1.}: char  ## Push Flag
+    ack {.bitsize: 1.}: char  ## Acknowledgement Flag
+    urg {.bitsize: 1.}: char  ## Urgent Flag
+    ecn {.bitsize: 1.}: char  ## ECN-Echo Flag
+    cwr {.bitsize: 1.}: char  ## Congestion Window Reduced Flag
                             ## //////////////////////////////
     window: cushort           ##  window
     checksum: cushort         ##  checksum
@@ -82,7 +82,7 @@ proc check_port(tcpheader: TCP_HDR) =
 proc PrintTcpPacket*(buffer: array[65536, char], size: int, iphdr: IPV4_HDR) =
     var ip_addr: winlean.InAddr
     ip_addr.s_addr = iphdr.ip_srcaddr
-    if winlean.inet_ntoa(ip_addr) == $target:
+    if winlean.inet_ntoa(ip_addr) == target:
         var 
             iphdrlen = (iphdr.ip_header_len.int * 4)
             miniBuffer: array[65536, char]
@@ -107,7 +107,7 @@ proc StartSniffing(snifferSocket: SOCKET) =
         data_size: int32
 
     while true:
-        data_size = recvfrom(snifferSocket, addr buffer, 65536.int32, 0.int32, addr saddr, addr saddr_size)
+        data_size = recvfrom(snifferSocket, cast[ptr char](addr buffer), 65536.int32, 0.int32, addr saddr, addr saddr_size)
         if data_size > 0:
             buffer.ProcessPacket(data_size)
         else:
@@ -115,7 +115,7 @@ proc StartSniffing(snifferSocket: SOCKET) =
             quit(-1) 
 
 proc start_sniffer*(ip: cstring, port_seq: openArray[int]) =
-    target = $ip
+    target = ip
     var 
         wsa: WSADATA
         myIP = $(getPrimaryIPAddr().address_v4.join("."))
